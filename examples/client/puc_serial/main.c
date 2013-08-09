@@ -6,6 +6,12 @@
 #include <fcntl.h>
 #include <string.h>
 
+#define TRY(err, func) \
+do { if((err = func)) { fprintf(stderr, #func": %s\n", sllp_error_str(err));\
+                        return; }}while(0)
+
+
+
 char *port;
 int baud, address, serial;
 
@@ -185,20 +191,12 @@ void test_analog(sllp_client_t *client, struct sllp_var_info *ad,
                 dvalue = dvalue - 20.0;
 
             written += printf("Write: %3.3f ", dvalue);
-            if((err = sllp_write_var(client, da, adjust)))
-            {
-                fprintf(stderr, "sllp_write_var: %s\n", sllp_error_str(err));
-                return;
-            }
+            TRY(err, sllp_write_var(client, da, adjust));
         }
 
         if(ad)
         {
-            if((err = sllp_read_var(client, ad, read_back)))
-            {
-                fprintf(stderr, "sllp_read_var: %s\n", sllp_error_str(err));
-                return;
-            }
+            TRY(err, sllp_read_var(client, ad, read_back));
 
             value = (read_back[0] << 16) + (read_back[1] << 8) + read_back[2];
             dvalue = (((double)value)/(1 << 18))*20.0 - 10.0;
@@ -224,25 +222,41 @@ void test_digital(sllp_client_t *client, struct sllp_var_info *din,
     {
         adjust[0] = 0x55;
         printf("Write %02X ", adjust[0]);
-
-
-        if((err = sllp_write_var(client, dout, adjust)))
-        {
-            fprintf(stderr, "sllp_write_var: %s\n", sllp_error_str(err));
-            return;
-        }
+        TRY(err, sllp_write_var(client, dout, adjust));
     }
 
     if(din)
     {
-        if((err = sllp_read_var(client, din, read_back)))
-        {
-            fprintf(stderr, "sllp_read_var: %s\n", sllp_error_str(err));
-            return;
-        }
-
+        TRY(err, sllp_read_var(client, din, read_back));
         printf("Read %02X\n", read_back[0]);
     }
+
+    if(dout)
+    {
+        adjust[0] = 0xF0;
+        printf("AND %02X ", adjust[0]);
+        TRY(err, sllp_bin_op_var(client, BIN_OP_AND, dout, adjust));
+    }
+
+    if(din)
+    {
+        TRY(err, sllp_read_var(client, din, read_back));
+        printf("Read %02X\n", read_back[0]);
+    }
+
+    if(dout)
+    {
+        adjust[0] = 0xFF;
+        printf("TOGGLE %02X ", adjust[0]);
+        TRY(err, sllp_bin_op_var(client, BIN_OP_OR, dout, adjust));
+    }
+
+    if(din)
+    {
+        TRY(err, sllp_read_var(client, din, read_back));
+        printf("Read %02X\n", read_back[0]);
+    }
+
 }
 
 int main(int argc, char **argv)
@@ -292,6 +306,9 @@ int main(int argc, char **argv)
         goto exit_destroy;
     }
 
+    puts("\nVariables:\n");
+    print_vars(vars);
+
     // Get the groups list
     struct sllp_groups_list *groups;
     if((err = sllp_get_groups_list(sllp, &groups)))
@@ -299,6 +316,9 @@ int main(int argc, char **argv)
         fprintf(stderr, "sllp_get_groups_list: %s\n", sllp_error_str(err));
         goto exit_destroy;
     }
+
+    puts("\nGroups:\n");
+    print_groups(groups);
 
     // Get the curves list
     struct sllp_curves_list *curves;
@@ -308,17 +328,10 @@ int main(int argc, char **argv)
         goto exit_destroy;
     }
 
-    // Print the lists
-    puts("\nVariables:\n");
-    print_vars(vars);
-
-    puts("\nGroups:\n");
-    print_groups(groups);
-
     puts("\nCurves:\n");
     print_curves(curves);
 
-    // Search the lists for the first of each type of variable
+    // Search the list for the first of each type of variable
     struct sllp_var_info *sync_config, *sync_enable;
     struct sllp_var_info *first_ad, *first_da;
     struct sllp_var_info *first_digin, *first_digout;
@@ -347,8 +360,8 @@ int main(int argc, char **argv)
     // Print them out
 
     puts("\nImportant variables:\n");
-    printf("SYNC_CONFIG id=%d\n", sync_config->id);
-    printf("SYNC_ENABLE id=%d\n", sync_enable->id);
+    printf("SYNC_CONFIG  id=%d\n", sync_config->id);
+    printf("SYNC_ENABLE  id=%d\n", sync_enable->id);
 
     if(first_ad)     printf("FIRST AD     id=%d\n", first_ad->id);
     if(first_da)     printf("FIRST DA     id=%d\n", first_da->id);
