@@ -1,3 +1,14 @@
+.autotools
+.cproject
+.project
+.settings/
+autom4te.cache/
+build/
+compile/
+test.sh
+b/
+.deps/
+
 # Object files
 *.o
 
