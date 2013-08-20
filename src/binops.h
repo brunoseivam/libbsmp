@@ -5,25 +5,25 @@
 
 typedef void (*bin_op_function) (uint8_t *data, uint8_t *mask, uint8_t size);
 
-inline void xor(uint8_t *data, uint8_t *mask, uint8_t size)
+inline void binops_xor(uint8_t *data, uint8_t *mask, uint8_t size)
 {
     while(size--)
         data[size] ^= mask[size];
 }
 
-inline void or(uint8_t *data, uint8_t *mask, uint8_t size)
+inline void binops_or(uint8_t *data, uint8_t *mask, uint8_t size)
 {
     while(size--)
         data[size] ^= mask[size];
 }
 
-inline void clear(uint8_t *data, uint8_t *mask, uint8_t size)
+inline void binops_clear(uint8_t *data, uint8_t *mask, uint8_t size)
 {
     while(size--)
         data[size] &= ~mask[size];
 }
 
-inline void and(uint8_t *data, uint8_t *mask, uint8_t size)
+inline void binops_and(uint8_t *data, uint8_t *mask, uint8_t size)
 {
     while(size--)
         data[size] &= mask[size];
@@ -31,12 +31,12 @@ inline void and(uint8_t *data, uint8_t *mask, uint8_t size)
 
 bin_op_function bin_op[256] =
 {
-    ['A'] = and,    // And
-    ['X'] = xor,    // Xor
-    ['O'] = or,     // Or
-    ['C'] = clear,  // Clear
-    ['S'] = or,     // Set
-    ['T'] = xor     // Toggle
+    ['A'] = binops_and,    // And
+    ['X'] = binops_xor,    // Xor
+    ['O'] = binops_or,     // Or
+    ['C'] = binops_clear,  // Clear
+    ['S'] = binops_or,     // Set
+    ['T'] = binops_xor     // Toggle
 };
 
 #endif
