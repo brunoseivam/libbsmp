@@ -60,7 +60,7 @@ struct sllp_server
 
 sllp_server_t *sllp_server_new (void)
 {
-    struct sllp_server *server = malloc(sizeof(*server));
+    struct sllp_server *server = (struct sllp_server*) malloc(sizeof(*server));
 
     if(!server)
         return NULL;
