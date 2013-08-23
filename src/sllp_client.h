@@ -61,11 +61,11 @@ sllp_client_t *sllp_client_new (sllp_comm_func_t send_func,
 /**
  * Deallocate a SLLP Client instance
  * 
- * @param sllp [input] A SLLP Client Library instance to be deallocated.
+ * @param client [input] A SLLP Client Library instance to be deallocated.
  * 
  * @return SLLP_SUCCESS or one of the following errors:
  * <ul>
- *   <li>SLLP_ERR_PARAM_INVALID: sllp is a NULL pointer. </li>
+ *   <li>SLLP_ERR_PARAM_INVALID: client is a NULL pointer. </li>
  * </ul>
  */
 enum sllp_err sllp_client_destroy (sllp_client_t *client);
@@ -81,12 +81,12 @@ enum sllp_err sllp_client_destroy (sllp_client_t *client);
  * sllp_client_new function) MUST be able to communicate before sllp_client_init
  * invocation.
  *
- * @param sllp [input] Handle to the instance to be initialized
+ * @param client [input] Handle to the instance to be initialized
  *
  * @return SLLP_SUCCESS or one of the following errors:
  * <ul>
- *   <li>SLLP_ERR_PARAM_INVALID: sllp is a NULL pointer or it was already
- *       initialized</li>
+ *   <li>SLLP_ERR_PARAM_INVALID: client is a NULL pointer or it was already
+ *                               initialized</li>
  *   <li>SLLP_ERR_COMM: There was a communication error during the
  *                      initialization of the sllp instance</li>
  *   <li>SLLP_ERR_OUT_OF_MEMORY: Not enough memory to complete the
@@ -102,12 +102,12 @@ enum sllp_err sllp_client_init(sllp_client_t *client);
  * The sllp instance MUST be previously initialized. Otherwise an empty list
  * will be returned.
  *
- * @param sllp [input] A SLLP Client Library instance
+ * @param client [input] A SLLP Client Library instance
  * @param list [output] Address of the variables list pointer
  *
  * @return SLLP_SUCCESS or one of the following errors:
  * <ul>
- *   <li>SLLP_ERR_PARAM_INVALID: either sllp or list is a NULL pointer</li>
+ *   <li>SLLP_ERR_PARAM_INVALID: either client or list is a NULL pointer</li>
  *   <li>SLLP_ERR_COMM: There was a failure either sending or receiving a
  *                      message</li>
  * </ul>
@@ -122,12 +122,12 @@ enum sllp_err sllp_get_vars_list (sllp_client_t *client,
  * The sllp instance MUST be previously initialized. Otherwise an empty list
  * will be returned.
  *
- * @param sllp [input] A SLLP Client Library instance
+ * @param client [input] A SLLP Client Library instance
  * @param list [output] Address of the groups list pointer
  *
  * @return SLLP_SUCCESS or one of the following errors:
  * <ul>
- *   <li>SLLP_ERR_PARAM_INVALID: either sllp or list is a NULL pointer</li>
+ *   <li>SLLP_ERR_PARAM_INVALID: either client or list is a NULL pointer</li>
  *   <li>SLLP_ERR_COMM: There was a failure either sending or receiving a
  *                      message</li>
  * </ul>
@@ -179,13 +179,13 @@ enum sllp_err sllp_get_status (sllp_client_t* client,
  *
  * The values buffer MUST be able to hold, at least, var->size bytes.
  *
- * @param sllp [input] A SLLP Client Library instance
+ * @param client [input] A SLLP Client Library instance
  * @param var [input] The variable to be read
  * @param value [output] Pointer to a buffer to contain the read values
  *
  * @return SLLP_SUCCESS or one of the following errors:
  * <ul>
- *   <li>SLLP_ERR_PARAM_INVALID: sllp, var or value is a NULL pointer</li>
+ *   <li>SLLP_ERR_PARAM_INVALID: client, var or value is a NULL pointer</li>
  *   <li>SLLP_ERR_PARAM_INVALID: var is not a valid server variable</li>
  *   <li>SLLP_ERR_COMM: There was a failure either sending or receiving a
  *                      message</li>
@@ -199,13 +199,13 @@ enum sllp_err sllp_read_var (sllp_client_t *client, struct sllp_var_info *var,
  *
  * The values buffer MUST contain, at least, var->size bytes.
  *
- * @param sllp [input] A SLLP Client Library instance
+ * @param client [input] A SLLP Client Library instance
  * @param var [input] The variable to be written
  * @param value [input] Pointer to a buffer containing the values to be written
  *
  * @return SLLP_SUCCESS or one of the following errors:
  * <ul>
- *   <li>SLLP_ERR_PARAM_INVALID: sllp, var or value is a NULL pointer</li>
+ *   <li>SLLP_ERR_PARAM_INVALID: client, var or value is a NULL pointer</li>
  *   <li>SLLP_ERR_PARAM_INVALID: var is not a valid server variable</li>
  *   <li>SLLP_ERR_COMM: There was a failure either sending or receiving a
  *                      message</li>
@@ -219,13 +219,13 @@ enum sllp_err sllp_write_var (sllp_client_t *client, struct sllp_var_info *var,
  *
  * The values buffer MUST be able to hold, at least, group->size bytes.
  *
- * @param sllp [input] A SLLP Client Library instance
+ * @param client [input] A SLLP Client Library instance
  * @param var [input] The variable to be read
  * @param value [output] Pointer to a buffer to contain the read values
  *
  * @return SLLP_SUCCESS or one of the following errors:
  * <ul>
- *   <li>SLLP_ERR_PARAM_INVALID: sllp, grp or value is a NULL pointer</li>
+ *   <li>SLLP_ERR_PARAM_INVALID: client, grp or value is a NULL pointer</li>
  *   <li>SLLP_ERR_PARAM_INVALID: grp is not a valid server group</li>
  *   <li>SLLP_ERR_COMM: There was a failure either sending or receiving a
  *                      message</li>
@@ -239,13 +239,13 @@ enum sllp_err sllp_read_group (sllp_client_t *client, struct sllp_group *grp,
  *
  * The values buffer MUST contain, at least, grp->size bytes.
  *
- * @param sllp [input] A SLLP Client Library instance
+ * @param client [input] A SLLP Client Library instance
  * @param grp [input] The group to be written
  * @param value [input] Pointer to a buffer containing the values to be written
  *
  * @return SLLP_SUCCESS or one of the following errors:
  * <ul>
- *   <li>SLLP_ERR_PARAM_INVALID: sllp, grp or value is a NULL pointer</li>
+ *   <li>SLLP_ERR_PARAM_INVALID: client, grp or value is a NULL pointer</li>
  *   <li>SLLP_ERR_PARAM_INVALID: grp is not a valid server group</li>
  *   <li>SLLP_ERR_COMM: There was a failure either sending or receiving a
  *                      message</li>
@@ -271,13 +271,13 @@ enum sllp_bin_op
  *
  * The mask MUST contain, at least, var->size bytes.
  *
- * @param sllp [input] A SLLP Client Library instance
+ * @param client [input] A SLLP Client Library instance
  * @param var [input] The variable to perform the operation
  * @param value [input] Pointer to a buffer containing the values to be written
  *
  * @return SLLP_SUCCESS or one of the following errors:
  * <ul>
- *   <li>SLLP_ERR_PARAM_INVALID: sllp, var or value is a NULL pointer</li>
+ *   <li>SLLP_ERR_PARAM_INVALID: client, var or value is a NULL pointer</li>
  *   <li>SLLP_ERR_PARAM_INVALID: var is not a valid server variable</li>
  *   <li>SLLP_ERR_PARAM_INVALID: op isn't one of the supported operations</li>
  *   <li>SLLP_ERR_COMM: There was a failure either sending or receiving a
@@ -293,13 +293,13 @@ enum sllp_err sllp_bin_op_var (sllp_client_t *client, enum sllp_bin_op op,
  *
  * The mask MUST contain, at least, grp->size bytes.
  *
- * @param sllp [input] A SLLP Client Library instance
+ * @param client [input] A SLLP Client Library instance
  * @param var [input] The group to perform the operation
  * @param value [input] Pointer to a buffer containing the values to be written
  *
  * @return SLLP_SUCCESS or one of the following errors:
  * <ul>
- *   <li>SLLP_ERR_PARAM_INVALID: sllp, grp or value is a NULL pointer</li>
+ *   <li>SLLP_ERR_PARAM_INVALID: client, grp or value is a NULL pointer</li>
  *   <li>SLLP_ERR_PARAM_INVALID: grp is not a valid server group</li>
  *   <li>SLLP_ERR_PARAM_OUT_OF_RANGE: op isn't one of the supported
  *                                    operations</li>
@@ -318,7 +318,7 @@ enum sllp_err sllp_bin_op_group (sllp_client_t *client, enum sllp_bin_op op,
  *
  * The parameter created_group will be ignored if it is NULL.
  *
- * @param sllp [input] A SLLP Client Library instance
+ * @param client [input] A SLLP Client Library instance
  * @param vars_list [input] NULL-terminated list of variables to be in the new
  *                          group
  * @param created_group [output] Variable to receive a pointer to the created
@@ -326,7 +326,8 @@ enum sllp_err sllp_bin_op_group (sllp_client_t *client, enum sllp_bin_op op,
  *
  * @return SLLP_SUCCESS or one of the following errors:
  * <ul>
- *   <li>SLLP_ERR_PARAM_INVALID: either sllp or vars_list is a NULL pointer</li>
+ *   <li>SLLP_ERR_PARAM_INVALID: either client or vars_list is a NULL pointer.
+ *   </li>
  *   <li>SLLP_ERR_PARAM_INVALID: vars_list contains an invalid variable</li>
  *   <li>SLLP_ERR_DUPLICATE: vars_list contains a duplicate entry</li>
  *   <li>SLLP_ERR_COMM: There was a failure either sending or receiving a
@@ -340,11 +341,11 @@ enum sllp_err sllp_create_group (sllp_client_t *client,
 /*
  * Removes all custom created groups from a server.
  *
- * @param sllp [input] A SLLP Client Library instance
+ * @param client [input] A SLLP Client Library instance
  *
  * @return SLLP_SUCCESS or one of the following errors:
  * <ul>
- *   <li>SLLP_ERR_PARAM_INVALID: sllp is a NULL pointer</li>
+ *   <li>SLLP_ERR_PARAM_INVALID: client is a NULL pointer</li>
  *   <li>SLLP_ERR_COMM: There was a failure either sending or receiving a
  *                      message</li>
  * </ul>
@@ -356,14 +357,14 @@ enum sllp_err sllp_remove_all_groups (sllp_client_t *client);
  *
  * The data buffer MUST be able to hold SLLP_CURVE_BLOCK_SIZE bytes.
  *
- * @param sllp [input] A SLLP Client Library instance
+ * @param client [input] A SLLP Client Library instance
  * @param curve [input] The curve to be read
  * @param offset [input] The block to be fetched
  * @param data [output] Buffer to hold the read data
  *
  * @return SLLP_SUCCESS or one of the following errors:
  * <ul>
- *   <li>SLLP_ERR_PARAM_INVALID: sllp, curve or data is a NULL pointer</li>
+ *   <li>SLLP_ERR_PARAM_INVALID: client, curve or data is a NULL pointer</li>
  *   <li>SLLP_ERR_OUT_OF_RANGE: offset is not less than curve->nblocks</li>
  *   <li>SLLP_ERR_COMM: There was a failure either sending or receiving a
  *                      message</li>
@@ -378,14 +379,14 @@ enum sllp_err sllp_request_curve_block (sllp_client_t *client,
  *
  *  The data buffer MUST be able to hold SLLP_CURVE_BLOCK_SIZE bytes.
  *
- * @param sllp [input] A SLLP Client Library instance
+ * @param client [input] A SLLP Client Library instance
  * @param curve [input] The curve to be written
  * @param offset [input] The block to be written
  * @param data [input] Buffer containing the data to be written
  *
  * @return SLLP_SUCCESS or one of the following errors:
  * <ul>
- *   <li>SLLP_ERR_PARAM_INVALID: sllp, curve or data is a NULL pointer</li>
+ *   <li>SLLP_ERR_PARAM_INVALID: client, curve or data is a NULL pointer</li>
  *   <li>SLLP_ERR_OUT_OF_RANGE: offset is not less than curve->nblocks</li>
  *   <li>SLLP_ERR_COMM: There was a failure either sending or receiving a
  *                      message</li>
@@ -400,12 +401,12 @@ enum sllp_err sllp_send_curve_block (sllp_client_t *client,
  *
  * The instance's list of curves is updated if the function is successful.
  *
- * @param sllp [input] A SLLP Client Library instance
+ * @param client [input] A SLLP Client Library instance
  * @param curve [input] The curve to have its checksum recalculated
  *
  * @return SLLP_SUCCESS or one of the following errors:
  * <ul>
- *   <li>SLLP_ERR_PARAM_INVALID: either sllp or curve is a NULL pointer</li>
+ *   <li>SLLP_ERR_PARAM_INVALID: either client or curve is a NULL pointer</li>
  *   <li>SLLP_ERR_COMM: There was a failure either sending or receiving a
  *                      message</li>
  * </ul>
