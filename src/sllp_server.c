@@ -65,6 +65,8 @@ sllp_server_t *sllp_server_new (void)
     if(!server)
         return NULL;
 
+    memset(server, 0, sizeof(*server));
+
     server->groups.count = GROUP_STANDARD_COUNT;
 
     group_init(&server->groups.list[GROUP_ALL_ID],   GROUP_ALL_ID);
@@ -72,7 +74,6 @@ sllp_server_t *sllp_server_new (void)
     group_init(&server->groups.list[GROUP_WRITE_ID], GROUP_ALL_ID);
 
     server->groups.count = GROUP_STANDARD_COUNT;
-    memset(server->modified_list, 0, sizeof(server->modified_list));
 
     return server;
 }
