@@ -330,7 +330,6 @@ sllp_client_t *sllp_client_new (sllp_comm_func_t send_func,
     client->curves.count = 0;
     client->curves.list = NULL;
 
-    client->status.status = 0;
     client->initialized = false;
 
     return client;
@@ -414,8 +413,25 @@ enum sllp_err sllp_get_curves_list (sllp_client_t *client,
 enum sllp_err sllp_get_status (sllp_client_t* client,
                                struct sllp_status **status)
 {
-    client = NULL;
-    status = NULL;
+    if(!client || !status)
+        return SLLP_ERR_PARAM_INVALID;
+
+    struct sllp_message response, request =
+    {
+        .code = CMD_QUERY_STATUS,
+        .payload_size = 0
+    };
+
+    if(command(client, &request, &response) || response.code != CMD_STATUS)
+        return SLLP_ERR_COMM;
+
+    client->status.size = response.payload_size;
+
+    if(response.payload_size)
+        memcpy(client->status.data, response.payload, response.payload_size);
+
+    *status = &client->status;
+
     return SLLP_SUCCESS;
 }
 

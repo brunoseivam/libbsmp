@@ -49,6 +49,25 @@ sllp_server_t *sllp_server_new (void);
 enum sllp_err sllp_server_destroy (sllp_server_t *server);
 
 /**
+ * Register a sllp_status structure that is sent to the client whenever a
+ * CMD_QUERY_STATUS is received. The structure must represent, at least, 1 byte
+ * of data and, at most, 254 bytes of data.
+ *
+ * @param server [input] Handle to the instance.
+ * @param status [input] Structure describing the status information.
+ *
+ * @return SLLP_SUCCESS or one of the following errors:
+ * <ul>
+ *   <li> SLLP_ERR_PARAM_INVALID: either server or status is a NULL pointer.
+ *   </li>
+ *   <li> SLLP_PARAM_OUT_OF_RANGE: status->size is less than 1 or greater than
+ *                                 64. </li>
+ * </ul>
+ */
+enum sllp_err sllp_register_status (sllp_server_t *server,
+                                    struct sllp_status *status);
+
+/**
  * Register a variable with a server instance. The memory pointed by the var
  * parameter must remain valid throughout the entire lifespan of the server
  * instance. The id field of the var parameter will be written by the SLLP lib.
@@ -63,9 +82,9 @@ enum sllp_err sllp_server_destroy (sllp_server_t *server);
  *
  * @return SLLP_SUCCESS or one of the following errors:
  * <ul>
- *   <li> SLLP_ERR_PARAM_INVALID: server, data or id is a NULL pointer. </li>
- *   <li> SLLP_PARAM_OUT_OF_RANGE: size is less than SLLP_VAR_SIZE_MIN or
- *                                 greater than SLLP_VAR_SIZE_MAX. </li>
+ *   <li> SLLP_ERR_PARAM_INVALID: server or var->data is a NULL pointer. </li>
+ *   <li> SLLP_PARAM_OUT_OF_RANGE: var->size is less than 1 or greater than 127.
+ *   </li>
  * </ul>
  */
 enum sllp_err sllp_register_variable (sllp_server_t *server,

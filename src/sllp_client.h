@@ -45,11 +45,6 @@ struct sllp_curves_list
     uint32_t count;
 };
 
-struct sllp_status
-{
-    uint8_t status;
-};
-
 /**
  * Allocate a new SLLP Client instance, returning a handle to it. This instance
  * should be deallocated with sllp_client_destroy after its use.
@@ -162,15 +157,19 @@ enum sllp_err sllp_get_curves_list (sllp_client_t *client,
                                     struct sllp_curves_list **list);
 
 /*
- * Returns the current status of the server being queried. The status
- * information is not specified by the current protocol version, v0.8.
- * Therefore, this function will always return SLLP_SUCCESS without modifying
- * the status parameter.
+ * Returns the current status of the server being queried.
  *
- * @param sllp [input] A SLLP Client Library instance
- * @param status [output] Address of a pointer to a status structure
+ * @param client [input] A SLLP Client Library instance
+ * @param status [output] Variable that will receive a pointer to a status
+ *                        structure.
  *
- * @return SLLP_SUCCESS, always
+ * @return SLLP_SUCCESS or one of the following errors:
+ * <ul>
+ *   <li>SLLP_ERR_PARAM_INVALID: either client or status is a NULL pointer.
+ *   </li>
+ *   <li>SLLP_ERR_COMM: There was a failure either sending or receiving a
+ *                      message</li>
+ * </ul>
  */
 enum sllp_err sllp_get_status (sllp_client_t* client,
                                struct sllp_status **status);

@@ -9,6 +9,9 @@
 #define VARIABLE_MIN_SIZE       1
 #define VARIABLE_MAX_SIZE       127
 
+#define STATUS_MIN_SIZE         1
+#define STATUS_MAX_SIZE         64
+
 #define MAX_VARIABLES           128
 #define MAX_GROUPS              8
 #define MAX_CURVES              64
@@ -36,6 +39,8 @@ static void group_to_mod_list (sllp_server_t *server, struct server_group *grp);
 
 struct sllp_server
 {
+    struct sllp_status *status;
+
     struct
     {
         struct sllp_var *list[MAX_VARIABLES];
@@ -84,6 +89,20 @@ enum sllp_err sllp_server_destroy (sllp_server_t* server)
         return SLLP_ERR_PARAM_INVALID;
 
     free(server);
+
+    return SLLP_SUCCESS;
+}
+
+enum sllp_err sllp_register_status (sllp_server_t *server,
+                                    struct sllp_status *status)
+{
+    if(!server || !status)
+        return SLLP_ERR_PARAM_INVALID;
+
+    if(status->size < STATUS_MIN_SIZE || status->size > STATUS_MAX_SIZE)
+        return SLLP_ERR_PARAM_OUT_OF_RANGE;
+
+    server->status = status;
 
     return SLLP_SUCCESS;
 }
@@ -186,6 +205,20 @@ struct message
 };
 
 static void message_set_answer(struct message *msg, enum command_code code);
+
+static void query_status (sllp_server_t *server, struct message *recv_msg,
+                          struct message *send_msg)
+{
+    if(recv_msg->payload_size != 0)
+    {
+        message_set_answer(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
+        return;
+    }
+
+    message_set_answer(send_msg, CMD_STATUS);
+    send_msg->payload_size = server->status->size;
+    memcpy(send_msg->payload, server->status->data, server->status->size);
+}
 
 static void query_vars_list (sllp_server_t *server, struct message *recv_msg,
                              struct message *send_msg)
@@ -801,6 +834,7 @@ typedef void (*command_function) (sllp_server_t *server,
                                   struct message *send_msg);
 
 static command_function command[256] = {
+    [CMD_QUERY_STATUS]          = query_status,
     [CMD_QUERY_VARS_LIST]       = query_vars_list,
     [CMD_QUERY_GROUPS_LIST]     = query_groups_list,
     [CMD_QUERY_GROUP]           = query_group,

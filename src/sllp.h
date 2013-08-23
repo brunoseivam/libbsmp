@@ -24,6 +24,12 @@ enum sllp_err
     SLLP_ERR_MAX
 };
 
+struct sllp_status
+{
+    uint8_t size;
+    uint8_t data[64];
+};
+
 struct sllp_var_info
 {
     uint8_t id;                     // ID of the variable, used in the protocol.
