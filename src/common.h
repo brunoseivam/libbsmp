@@ -6,7 +6,7 @@
 
 #include "sllp.h"
 
-#define CURVE_INFO_SIZE         18
+#define CURVE_INFO_SIZE         2
 #define CURVE_CSUM_SIZE         16
 
 #define HEADER_SIZE             SLLP_HEADER_SIZE
@@ -33,6 +33,8 @@ enum command_code
     CMD_GROUP,
     CMD_QUERY_CURVES_LIST,
     CMD_CURVES_LIST,
+    CMD_QUERY_CURVE_CSUM,
+    CMD_CURVE_CSUM,
 
     CMD_READ_VAR = 0x10,
     CMD_VAR_READING,

@@ -14,7 +14,7 @@
 
 #define MAX_VARIABLES           128
 #define MAX_GROUPS              8
-#define MAX_CURVES              64
+#define MAX_CURVES              128
 
 // Private server group structure
 struct server_group
@@ -35,7 +35,6 @@ struct server_group
 static void group_init        (struct server_group *grp, uint8_t id);
 static void group_add_var     (struct server_group *grp, struct sllp_var *var);
 static void group_to_mod_list (sllp_server_t *server, struct server_group *grp);
-
 
 struct sllp_server
 {
@@ -316,19 +315,42 @@ static void query_curves_list (sllp_server_t *server, struct message *recv_msg,
 
     message_set_answer(send_msg, CMD_CURVES_LIST);
 
-    struct sllp_curve *curve;
-    uint8_t *payloadp = send_msg->payload;
+    struct sllp_curve_info *curve;
     unsigned int i;
     for(i = 0; i < server->curves.count; ++i)
     {
-        curve = server->curves.list[i];
+        curve = &server->curves.list[i]->info;
 
-        (*payloadp++) = curve->info.writable;
-        (*payloadp++) = curve->info.nblocks;
-        memcpy(payloadp, curve->info.checksum, sizeof(curve->info.checksum));
-        payloadp += sizeof(curve->info.checksum);
+        send_msg->payload[i*CURVE_INFO_SIZE]     = curve->writable;
+        send_msg->payload[i*CURVE_INFO_SIZE + 1] = curve->nblocks;
     }
+
     send_msg->payload_size = server->curves.count*CURVE_INFO_SIZE;
+}
+
+static void query_curve_csum (sllp_server_t *server, struct message *recv_msg,
+                              struct message *send_msg)
+{
+    // Check payload size
+    if(recv_msg->payload_size != 1)
+    {
+        message_set_answer(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
+        return;
+    }
+
+    uint8_t curve_id = recv_msg->payload[0];
+
+    if(curve_id >= server->curves.count)
+    {
+        message_set_answer(send_msg, CMD_ERR_INVALID_ID);
+        return;
+    }
+
+    struct sllp_curve *curve = server->curves.list[curve_id];
+
+    message_set_answer(send_msg, CMD_CURVE_CSUM);
+    memcpy(send_msg->payload, curve->info.checksum, CURVE_CSUM_SIZE);
+    send_msg->payload_size = CURVE_CSUM_SIZE;
 }
 
 static void read_var (sllp_server_t *server, struct message *recv_msg,
@@ -817,7 +839,9 @@ static void recalc_curve_csum (sllp_server_t *server, struct message *recv_msg,
     }
     MD5Final(curve->info.checksum, &md5ctx);
 
-    message_set_answer(send_msg, CMD_OK);
+    message_set_answer(send_msg, CMD_CURVE_CSUM);
+    memcpy(send_msg->payload, curve->info.checksum, CURVE_CSUM_SIZE);
+    send_msg->payload_size = CURVE_CSUM_SIZE;
 }
 
 static void message_set_answer (struct message *msg, enum command_code code)
@@ -839,6 +863,7 @@ static command_function command[256] = {
     [CMD_QUERY_GROUPS_LIST]     = query_groups_list,
     [CMD_QUERY_GROUP]           = query_group,
     [CMD_QUERY_CURVES_LIST]     = query_curves_list,
+    [CMD_QUERY_CURVE_CSUM]      = query_curve_csum,
     [CMD_READ_VAR]              = read_var,
     [CMD_READ_GROUP]            = read_group,
     [CMD_WRITE_VAR]             = write_var,
