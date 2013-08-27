@@ -287,7 +287,8 @@ static enum sllp_err update_curves_list(sllp_client_t *client)
     if(client->curves.list)
         free(client->curves.list);
 
-    client->curves.list = malloc(client->curves.count * sizeof(*client->curves.list));
+    client->curves.list = malloc(client->curves.count *
+                                                  sizeof(*client->curves.list));
 
     if(!client->curves.list)
         return SLLP_ERR_OUT_OF_MEMORY;
@@ -296,12 +297,26 @@ static enum sllp_err update_curves_list(sllp_client_t *client)
     for(i = 0; i < client->curves.count; ++i)
     {
         struct sllp_curve_info *curve = &client->curves.list[i];
-        uint8_t *curve_info = &response.payload[i*CURVE_INFO_SIZE];
 
         curve->id       = i;
-        curve->writable = curve_info[0];
-        curve->nblocks  = curve_info[1] + 1;
-        memcpy(curve->checksum, &curve_info[2], sizeof(curve->checksum));
+        curve->writable = response.payload[i*CURVE_INFO_SIZE];
+        curve->nblocks  = response.payload[i*CURVE_INFO_SIZE + 1] + 1;
+
+        struct sllp_message response_csum, request_csum =
+        {
+            .code = CMD_QUERY_CURVE_CSUM,
+            .payload = {i},
+            .payload_size = 1
+        };
+
+        if(!command(client, &request_csum, &response_csum) ||
+           response_csum.code != CMD_CURVE_CSUM)
+        {
+            free(client->curves.list);
+            return SLLP_ERR_COMM;
+        }
+
+        memcpy(curve->checksum, response_csum.payload, CURVE_CSUM_SIZE);
     }
 
     return SLLP_SUCCESS;
