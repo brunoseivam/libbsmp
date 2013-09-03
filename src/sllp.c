@@ -1,6 +1,6 @@
 #include "sllp.h"
 
-static char* SLLP_PROTO_VERSION = "0.9";
+static char* SLLP_PROTO_VERSION = "0.95";
 
 static char* error_str[SLLP_ERR_MAX] =
 {
