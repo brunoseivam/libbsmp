@@ -29,12 +29,24 @@ struct sllp_raw_packet
 
 /**
  * Allocate a new server instance, returning a handle to it. This instance
- * should be deallocated with sllp_destroy after its use.
+ * should be deallocated with sllp_destroy after its use. The instance returned
+ * is already initialized. The instance is allocated with malloc().
  *
  * @return A handle to a server or NULL if there wasn't enough memory to do the
  *         allocation.
  */
 sllp_server_t *sllp_server_new (void);
+
+/**
+ * Allocate a new server instance, returning a handle to it. This instance
+ * should be deallocated with sllp_destroy after its use. The instance returned
+ * is already initialized. The instance is returned from a pool of instances
+ * allocated on the heap.
+ *
+ * @return A handle to a server or NULL if there wasn't enough memory to do the
+ *         allocation.
+ */
+sllp_server_t *sllp_server_new_from_pool (void);
 
 /**
  * Deallocate a server instance

@@ -5,6 +5,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #define VARIABLE_MIN_SIZE       1
 #define VARIABLE_MAX_SIZE       127
@@ -15,6 +16,8 @@
 #define MAX_VARIABLES           128
 #define MAX_GROUPS              8
 #define MAX_CURVES              128
+
+#define SERVER_POOL_SIZE        1
 
 // Private server group structure
 struct server_group
@@ -62,13 +65,24 @@ struct sllp_server
     sllp_hook_t hook;
 };
 
-sllp_server_t *sllp_server_new (void)
+struct
 {
-    struct sllp_server *server = (struct sllp_server*) malloc(sizeof(*server));
+    struct sllp_server list[SERVER_POOL_SIZE];
+    unsigned int count;
+    unsigned int allocated;
+}server_pool = {{0}, 0};
 
-    if(!server)
-        return NULL;
+static int server_pool_index (struct sllp_server *server)
+{
+    int i;
+    for(i = 0; i < SERVER_POOL_SIZE; ++i)
+        if(server == server_pool.list + i)
+            return i;
+    return -1;
+}
 
+static void server_init (struct sllp_server *server)
+{
     memset(server, 0, sizeof(*server));
 
     server->groups.count = GROUP_STANDARD_COUNT;
@@ -78,8 +92,32 @@ sllp_server_t *sllp_server_new (void)
     group_init(&server->groups.list[GROUP_WRITE_ID], GROUP_ALL_ID);
 
     server->groups.count = GROUP_STANDARD_COUNT;
+}
+
+sllp_server_t *sllp_server_new (void)
+{
+    struct sllp_server *server = (struct sllp_server*) malloc(sizeof(*server));
+
+    if(!server)
+        return NULL;
+
+    server_init(server);
 
     return server;
+}
+
+sllp_server_t *sllp_server_new_from_pool (void)
+{
+    if(server_pool.count == SERVER_POOL_SIZE)
+        return NULL;
+
+    unsigned int i;
+    for(i = 0; server_pool.allocated & (1 << i); ++i);
+
+    ++server_pool.count;
+    server_pool.allocated |= (1 << i);
+
+    return &server_pool.list[i];
 }
 
 enum sllp_err sllp_server_destroy (sllp_server_t* server)
@@ -87,7 +125,17 @@ enum sllp_err sllp_server_destroy (sllp_server_t* server)
     if(!server)
         return SLLP_ERR_PARAM_INVALID;
 
-    free(server);
+    int pool_index = server_pool_index(server);
+
+    if(pool_index < 0)
+        free(server);
+    else if(server_pool.allocated & (1 << pool_index))
+    {
+        --server_pool.count;
+        server_pool.allocated ^= 1 << pool_index;
+    }
+    else
+        return SLLP_ERR_PARAM_INVALID;
 
     return SLLP_SUCCESS;
 }
