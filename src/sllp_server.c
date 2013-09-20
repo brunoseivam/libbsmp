@@ -70,7 +70,7 @@ struct
     struct sllp_server list[SERVER_POOL_SIZE];
     unsigned int count;
     unsigned int allocated;
-}server_pool = {{0}, 0};
+}server_pool = {{{0}}, 0, 0};
 
 static int server_pool_index (struct sllp_server *server)
 {
