@@ -85,11 +85,9 @@ static void server_init (struct sllp_server *server)
 {
     memset(server, 0, sizeof(*server));
 
-    server->groups.count = GROUP_STANDARD_COUNT;
-
     group_init(&server->groups.list[GROUP_ALL_ID],   GROUP_ALL_ID);
-    group_init(&server->groups.list[GROUP_READ_ID],  GROUP_ALL_ID);
-    group_init(&server->groups.list[GROUP_WRITE_ID], GROUP_ALL_ID);
+    group_init(&server->groups.list[GROUP_READ_ID],  GROUP_READ_ID);
+    group_init(&server->groups.list[GROUP_WRITE_ID], GROUP_WRITE_ID);
 
     server->groups.count = GROUP_STANDARD_COUNT;
 }
@@ -117,7 +115,11 @@ sllp_server_t *sllp_server_new_from_pool (void)
     ++server_pool.count;
     server_pool.allocated |= (1 << i);
 
-    return &server_pool.list[i];
+    struct sllp_server *server = &server_pool.list[i];
+
+    server_init(server);
+
+    return server;
 }
 
 enum sllp_err sllp_server_destroy (sllp_server_t* server)
