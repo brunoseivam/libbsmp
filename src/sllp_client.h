@@ -372,7 +372,7 @@ enum sllp_err sllp_remove_all_groups (sllp_client_t *client);
  */
 enum sllp_err sllp_request_curve_block (sllp_client_t *client,
                                         struct sllp_curve_info *curve,
-                                        uint8_t offset, uint8_t *data);
+                                        uint16_t offset, uint8_t *data);
 
 /*
  * Writes values to a block of a curve.
@@ -394,7 +394,7 @@ enum sllp_err sllp_request_curve_block (sllp_client_t *client,
  */
 enum sllp_err sllp_send_curve_block (sllp_client_t *client,
                                      struct sllp_curve_info *curve,
-                                     uint8_t offset, uint8_t *data);
+                                     uint16_t offset, uint8_t *data);
 
 /*
  * Request a recalculation of the checksum of a server curve.

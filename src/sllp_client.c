@@ -298,9 +298,10 @@ static enum sllp_err update_curves_list(sllp_client_t *client)
     {
         struct sllp_curve_info *curve = &client->curves.list[i];
 
-        curve->id       = i;
-        curve->writable = response.payload[i*CURVE_INFO_SIZE];
-        curve->nblocks  = response.payload[i*CURVE_INFO_SIZE + 1] + 1;
+        curve->id        = i;
+        curve->writable  = response.payload[i*CURVE_INFO_SIZE];
+        curve->nblocks   = response.payload[i*CURVE_INFO_SIZE + 1] << 8 +
+                           response.payload[i*CURVE_INFO_SIZE + 2] + 1;
 
         struct sllp_message response_csum, request_csum =
         {
@@ -685,34 +686,34 @@ enum sllp_err sllp_remove_all_groups (sllp_client_t *client)
 
 enum sllp_err sllp_request_curve_block (sllp_client_t *client,
                                         struct sllp_curve_info *curve,
-                                        uint8_t offset, uint8_t *data)
+                                        uint16_t offset, uint8_t *data)
 {
     if(!client || !curve || !data)
         return SLLP_ERR_PARAM_INVALID;
 
     if(!curves_list_contains(&client->curves, curve))
-            return SLLP_ERR_PARAM_INVALID;
+        return SLLP_ERR_PARAM_INVALID;
 
-    if(offset >= curve->nblocks)
+    if(offset > curve->nblocks)
         return SLLP_ERR_PARAM_OUT_OF_RANGE;
 
     struct sllp_message response, request = {
         .code = CMD_CURVE_TRANSMIT,
-        .payload = {curve->id, offset},
-        .payload_size = 2
+        .payload = {curve->id, offset >> 8, offset & 0xFF},
+        .payload_size = CURVE_INFO_SIZE
     };
 
-    if(!command(client, &request, &response) || response.code != CMD_CURVE_BLOCK)
+    if(!command(client, &request, &response) || response.code !=CMD_CURVE_BLOCK)
         return SLLP_ERR_COMM;
 
-    memcpy(data, response.payload + 2, CURVE_BLOCK);
+    memcpy(data, response.payload + CURVE_INFO_SIZE, CURVE_BLOCK_SIZE);
 
     return SLLP_SUCCESS;
 }
 
 enum sllp_err sllp_send_curve_block (sllp_client_t *client,
                                      struct sllp_curve_info *curve,
-                                     uint8_t offset, uint8_t *data)
+                                     uint16_t offset, uint8_t *data)
 {
     if(!client || !curve || !data)
         return SLLP_ERR_PARAM_INVALID;
@@ -720,16 +721,16 @@ enum sllp_err sllp_send_curve_block (sllp_client_t *client,
     if(!curves_list_contains(&client->curves, curve))
         return SLLP_ERR_PARAM_INVALID;
 
-    if(offset >= curve->nblocks)
+    if(offset > curve->nblocks)
         return SLLP_ERR_PARAM_OUT_OF_RANGE;
 
     struct sllp_message response, request = {
         .code = CMD_CURVE_BLOCK,
-        .payload = {curve->id, offset},
-        .payload_size = MAX_PAYLOAD
+        .payload = {curve->id, offset >> 8, offset & 0xFF},
+        .payload_size = CURVE_PKT_SIZE
     };
 
-    memcpy(data, &request.payload[2], CURVE_BLOCK);
+    memcpy(request.payload + CURVE_INFO_SIZE, data, CURVE_BLOCK_SIZE);
 
     if(!command(client, &request, &response) || response.code != CMD_OK)
         return SLLP_ERR_COMM;

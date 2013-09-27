@@ -6,7 +6,9 @@
 
 #define SLLP_HEADER_SIZE        2
 #define SLLP_CURVE_BLOCK_SIZE   16384
-#define SLLP_MAX_PAYLOAD        (SLLP_CURVE_BLOCK_SIZE+2)
+#define SLLP_CURVE_BLOCK_INFO   3
+#define SLLP_CURVE_BLOCK_PKT    (SLLP_CURVE_BLOCK_INFO+SLLP_CURVE_BLOCK_SIZE)
+#define SLLP_MAX_PAYLOAD        SLLP_CURVE_BLOCK_PKT
 #define SLLP_MAX_MESSAGE        (SLLP_HEADER_SIZE+SLLP_MAX_PAYLOAD)
 
 enum sllp_err
@@ -39,10 +41,10 @@ struct sllp_var_info
 
 struct sllp_curve_info
 {
-    uint8_t id;                     // ID of the curve, used in the protocol.
-    bool    writable;               // Determine if the curve is writable.
-    uint8_t nblocks;                // How many 16kB blocks the curve contains.
-    uint8_t checksum[16];           // MD5 checksum of the curve
+    uint8_t  id;                    // ID of the curve, used in the protocol.
+    bool     writable;              // Determine if the curve is writable.
+    uint16_t nblocks;               // How many 16kB blocks the curve contains.
+    uint8_t  checksum[16];          // MD5 checksum of the curve
 };
 
 struct sllp_var
@@ -58,10 +60,10 @@ struct sllp_curve
     struct sllp_curve_info info;   // Information about the curve identification
 
     // Read a SLLP_CURVE_BLOCK_SIZE bytes block into data
-    void (*read_block) (struct sllp_curve *curve, uint8_t block, uint8_t *data);
+    void (*read_block) (struct sllp_curve *curve, uint16_t block,uint8_t *data);
 
     // Write a SLLP_CURVE_BLOCK_SIZE bytes block from data
-    void (*write_block)(struct sllp_curve *curve, uint8_t block, uint8_t *data);
+    void (*write_block)(struct sllp_curve *curve, uint16_t block,uint8_t *data);
 
     void    *user;                 // The user can make use of this variable as
                                    // he wishes. It is not touched by SLLP.

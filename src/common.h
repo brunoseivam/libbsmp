@@ -6,11 +6,13 @@
 
 #include "sllp.h"
 
-#define CURVE_INFO_SIZE         2
+#define CURVE_INFO_SIZE         SLLP_CURVE_BLOCK_INFO
+#define CURVE_BLOCK_SIZE        SLLP_CURVE_BLOCK_SIZE
+#define CURVE_PKT_SIZE          SLLP_CURVE_BLOCK_PKT
 #define CURVE_CSUM_SIZE         16
 
 #define HEADER_SIZE             SLLP_HEADER_SIZE
-#define CURVE_BLOCK             SLLP_CURVE_BLOCK_SIZE
+
 #define MAX_PAYLOAD             SLLP_MAX_PAYLOAD
 #define MAX_MESSAGE             SLLP_MAX_MESSAGE
 #define MAX_PAYLOAD_ENCODED     255

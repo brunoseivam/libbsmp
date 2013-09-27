@@ -372,7 +372,8 @@ static void query_curves_list (sllp_server_t *server, struct message *recv_msg,
         curve = &server->curves.list[i]->info;
 
         send_msg->payload[i*CURVE_INFO_SIZE]     = curve->writable;
-        send_msg->payload[i*CURVE_INFO_SIZE + 1] = curve->nblocks;
+        send_msg->payload[i*CURVE_INFO_SIZE + 1] = curve->nblocks >> 8;
+        send_msg->payload[i*CURVE_INFO_SIZE + 2] = curve->nblocks & 0xFF;
     }
 
     send_msg->payload_size = server->curves.count*CURVE_INFO_SIZE;
@@ -788,7 +789,7 @@ static void request_curve_block (sllp_server_t *server,
                                  struct message *send_msg)
 {
     // Check payload size
-    if(recv_msg->payload_size != 2)
+    if(recv_msg->payload_size != CURVE_INFO_SIZE)
     {
         message_set_answer(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
         return;
@@ -806,7 +807,7 @@ static void request_curve_block (sllp_server_t *server,
     // Get curve
     struct sllp_curve *curve = server->curves.list[curve_id];
 
-    uint8_t block_offset = recv_msg->payload[1];
+    uint16_t block_offset = (recv_msg->payload[1] << 8) + recv_msg->payload[2];
 
     if(block_offset > curve->info.nblocks)
     {
@@ -815,17 +816,18 @@ static void request_curve_block (sllp_server_t *server,
     }
 
     message_set_answer(send_msg, CMD_CURVE_BLOCK);
-    send_msg->payload[0] = curve->info.id;
-    send_msg->payload[1] = block_offset;
+    send_msg->payload[0] = recv_msg->payload[0];    // Curve ID
+    send_msg->payload[1] = recv_msg->payload[1];    // Offset (most sig.)
+    send_msg->payload[2] = recv_msg->payload[2];    // Offset (less sig.)
 
-    curve->read_block(curve, block_offset, send_msg->payload + 2);
-    send_msg->payload_size = 2 + CURVE_BLOCK;
+    curve->read_block(curve, block_offset, send_msg->payload + CURVE_INFO_SIZE);
+    send_msg->payload_size = CURVE_PKT_SIZE;
 }
 
 static void curve_block (sllp_server_t *server, struct message *recv_msg,
                          struct message *send_msg)
 {
-    if(recv_msg->payload_size != 2 + CURVE_BLOCK)
+    if(recv_msg->payload_size != CURVE_PKT_SIZE)
     {
         message_set_answer(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
         return;
@@ -843,13 +845,13 @@ static void curve_block (sllp_server_t *server, struct message *recv_msg,
     // Get curve
     struct sllp_curve *curve = server->curves.list[curve_id];
 
-    uint8_t block_offset = recv_msg->payload[1];
+    uint16_t block_offset = (recv_msg->payload[1] << 8) + recv_msg->payload[2];
     if(block_offset > curve->info.nblocks)
     {
         message_set_answer(send_msg, CMD_ERR_INVALID_VALUE);
         return;
     }
-    curve->write_block(curve, block_offset, recv_msg->payload + 2);
+    curve->write_block(curve, block_offset, recv_msg->payload+CURVE_INFO_SIZE);
     message_set_answer(send_msg, CMD_OK);
 }
 
@@ -876,7 +878,7 @@ static void recalc_curve_csum (sllp_server_t *server, struct message *recv_msg,
 
     // Calculate checksum (this might take a while)
     unsigned int nblocks = curve->info.nblocks + 1;
-    uint8_t block[CURVE_BLOCK];
+    uint8_t block[CURVE_BLOCK_SIZE];
     MD5_CTX md5ctx;
 
     MD5Init(&md5ctx);
@@ -884,8 +886,8 @@ static void recalc_curve_csum (sllp_server_t *server, struct message *recv_msg,
     unsigned int i;
     for(i = 0; i < nblocks; ++i)
     {
-        curve->read_block(curve, (uint8_t)i, block);
-        MD5Update(&md5ctx, block, CURVE_BLOCK);
+        curve->read_block(curve, (uint16_t)i, block);
+        MD5Update(&md5ctx, block, CURVE_BLOCK_SIZE);
     }
     MD5Final(curve->info.checksum, &md5ctx);
 
