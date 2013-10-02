@@ -310,7 +310,7 @@ static enum sllp_err update_curves_list(sllp_client_t *client)
             .payload_size = 1
         };
 
-        if(!command(client, &request_csum, &response_csum) ||
+        if(command(client, &request_csum, &response_csum) ||
            response_csum.code != CMD_CURVE_CSUM)
         {
             free(client->curves.list);
@@ -657,7 +657,7 @@ enum sllp_err sllp_create_group (sllp_client_t *client,
     if(!request.payload_size)
         return SLLP_ERR_PARAM_INVALID;
 
-    if(!command(client, &request, &response))
+    if(command(client, &request, &response))
         return SLLP_ERR_COMM;
 
     if(response.code != CMD_OK)
@@ -678,7 +678,7 @@ enum sllp_err sllp_remove_all_groups (sllp_client_t *client)
         .payload_size = 0
     };
 
-    if(!command(client, &request, &response) || response.code != CMD_OK)
+    if(command(client, &request, &response) || response.code != CMD_OK)
         return SLLP_ERR_COMM;
 
     return SLLP_SUCCESS;
@@ -703,7 +703,7 @@ enum sllp_err sllp_request_curve_block (sllp_client_t *client,
         .payload_size = CURVE_INFO_SIZE
     };
 
-    if(!command(client, &request, &response) || response.code !=CMD_CURVE_BLOCK)
+    if(command(client, &request, &response) || response.code !=CMD_CURVE_BLOCK)
         return SLLP_ERR_COMM;
 
     memcpy(data, response.payload + CURVE_INFO_SIZE, CURVE_BLOCK_SIZE);
@@ -732,7 +732,7 @@ enum sllp_err sllp_send_curve_block (sllp_client_t *client,
 
     memcpy(request.payload + CURVE_INFO_SIZE, data, CURVE_BLOCK_SIZE);
 
-    if(!command(client, &request, &response) || response.code != CMD_OK)
+    if(command(client, &request, &response) || response.code != CMD_OK)
         return SLLP_ERR_COMM;
 
     return SLLP_SUCCESS;
