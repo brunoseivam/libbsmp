@@ -280,7 +280,7 @@ static enum sllp_err update_curves_list(sllp_client_t *client)
     if(!response.payload_size)
         return SLLP_SUCCESS;
 
-    // Each 18-byte block in the response correspond to a curve
+    // Each 3-byte block in the response correspond to a curve
     client->curves.count = response.payload_size/CURVE_INFO_SIZE;
 
     // If there was a previous list, free it
@@ -300,7 +300,7 @@ static enum sllp_err update_curves_list(sllp_client_t *client)
 
         curve->id        = i;
         curve->writable  = response.payload[i*CURVE_INFO_SIZE];
-        curve->nblocks   = response.payload[i*CURVE_INFO_SIZE + 1] << 8 +
+        curve->nblocks   = (response.payload[i*CURVE_INFO_SIZE + 1] << 8) +
                            response.payload[i*CURVE_INFO_SIZE + 2] + 1;
 
         struct sllp_message response_csum, request_csum =
