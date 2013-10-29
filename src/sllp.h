@@ -19,6 +19,20 @@
         type list[max];\
     }
 
+enum sllp_bin_op
+{
+    BIN_OP_AND,
+    BIN_OP_OR,
+    BIN_OP_XOR,
+    BIN_OP_SET,
+    BIN_OP_CLEAR,
+    BIN_OP_TOGGLE,
+
+    BIN_OP_COUNT,   // Number of binary operations
+};
+
+typedef void (*bin_op_function) (uint8_t *data, uint8_t *mask, uint8_t size);
+bin_op_function bin_op[256];
 
 enum sllp_err
 {
@@ -31,7 +45,6 @@ enum sllp_err
                                     // object
     SLLP_ERR_COMM,                  // There was a communication error reported
                                     // by one of the communication functions.
-
     SLLP_ERR_MAX
 };
 

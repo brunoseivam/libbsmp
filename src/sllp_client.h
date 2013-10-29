@@ -207,18 +207,6 @@ enum sllp_err sllp_read_group (sllp_client_t *client, struct sllp_group *grp,
 enum sllp_err sllp_write_group (sllp_client_t *client, struct sllp_group *grp,
                                 uint8_t *values);
 
-enum sllp_bin_op
-{
-    BIN_OP_AND,
-    BIN_OP_OR,
-    BIN_OP_XOR,
-    BIN_OP_SET,
-    BIN_OP_CLEAR,
-    BIN_OP_TOGGLE,
-
-    BIN_OP_COUNT,   // Number of binary operations
-};
-
 /*
  * Perform a binary operation in a variable with the bits specified by the mask.
  *

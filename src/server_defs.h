@@ -36,7 +36,7 @@ struct sllp_server
     sllp_hook_t hook;
 };
 
-inline void message_set_answer (struct message *msg, uint8_t code)
+extern inline void message_set_answer (struct message *msg, uint8_t code)
 {
     msg->command_code = code;
     msg->payload_size = 0;

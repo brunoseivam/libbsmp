@@ -13,6 +13,27 @@ static char* error_str[SLLP_ERR_MAX] =
     [SLLP_ERR_COMM]                 = "Sending or receiving a message failed"
 };
 
+#define BINOPS_FUNC(name, operation)\
+    void binops_##name (uint8_t *data, uint8_t *mask, uint8_t size) {\
+        while(size--)\
+            data[size] operation mask[size];\
+    }
+
+BINOPS_FUNC(and, &=)
+BINOPS_FUNC(or, |=)
+BINOPS_FUNC(xor, ^=)
+BINOPS_FUNC(clear, &=~)
+
+bin_op_function bin_op[256] =
+{
+    ['A'] = binops_and,    // AND
+    ['X'] = binops_xor,    // XOR
+    ['O'] = binops_or,     // OR
+    ['C'] = binops_clear,  // CLEAR BITS
+    ['S'] = binops_or,     // SET BITS
+    ['T'] = binops_xor     // TOGGLE BITS
+};
+
 char *sllp_error_str (enum sllp_err error)
 {
     return error_str[error];

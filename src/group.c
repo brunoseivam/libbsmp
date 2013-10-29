@@ -1,7 +1,6 @@
 #include "group.h"
 #include "server_defs.h"
 #include "sllp_server.h"
-#include "binops.h"
 
 #include <stdlib.h>
 #include <string.h>

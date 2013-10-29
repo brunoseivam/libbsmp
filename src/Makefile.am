@@ -1,6 +1,6 @@
 lib_LIBRARIES = libsllp.a
 libsllp_a_SOURCES = \
-          binops.h md5/md5.c md5/md5.h\
+          md5/md5.c md5/md5.h\
           sllp.h sllp.c\
 					sllp_var.h sllp_group.h sllp_curve.h sllp_func.h\
 					sllp_client.h sllp_server.h\
