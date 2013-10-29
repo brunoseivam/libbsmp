@@ -123,8 +123,6 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
-CHECK_CFLAGS = @CHECK_CFLAGS@
-CHECK_LIBS = @CHECK_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
@@ -156,9 +154,6 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PKG_CONFIG = @PKG_CONFIG@
-PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
-PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -216,7 +211,9 @@ libsllp_a_SOURCES = \
 					var.c group.c curve.c func.c\
 					sllp_server.c sllp_client.c
 
-include_HEADERS = sllp.h sllp_client.h sllp_server.h
+include_HEADERS = sllp.h sllp_client.h sllp_server.h\
+                  sllp_var.h sllp_group.h sllp_func.h sllp_curve.h
+
 all: all-am
 
 .SUFFIXES:

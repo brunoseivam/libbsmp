@@ -7,5 +7,6 @@ libsllp_a_SOURCES = \
 					var.h group.h curve.h func.h defs.h server_defs.h\
 					var.c group.c curve.c func.c\
 					sllp_server.c sllp_client.c
-include_HEADERS = sllp.h sllp_client.h sllp_server.h
+include_HEADERS = sllp.h sllp_client.h sllp_server.h\
+                  sllp_var.h sllp_group.h sllp_func.h sllp_curve.h
 
