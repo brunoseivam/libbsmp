@@ -2,6 +2,10 @@
 #define SLLP_CLIENT_H
 
 #include "sllp.h"
+#include "sllp_var.h"
+#include "sllp_group.h"
+#include "sllp_curve.h"
+#include "sllp_func.h"
 
 // Types
 
@@ -11,39 +15,6 @@ typedef struct sllp_client sllp_client_t;
 // Communication function (send and receive data). Must return 0 if successful
 // and anything but 0 otherwise.
 typedef int (*sllp_comm_func_t) (uint8_t* data, uint32_t *count);
-
-// Structures representing 'objects' manipulated by the client library
-struct sllp_vars_list
-{
-    struct sllp_var_info *list;
-    uint32_t count;
-};
-
-struct sllp_group
-{
-    uint8_t               id;           // ID of the group
-    bool                  writable;     // Whether all variables in the group
-                                        // are writable
-    struct
-    {
-        struct sllp_var_info** list;    // List of variables in the group
-        uint32_t               count;   // Number of variables in the group
-    }vars;
-    uint8_t               size;         // Sum of the sizes of all variables in
-                                        // the group
-};
-
-struct sllp_groups_list
-{
-    struct sllp_group *list;
-    uint32_t count;
-};
-
-struct sllp_curves_list
-{
-    struct sllp_curve_info *list;
-    uint32_t count;
-};
 
 /**
  * Allocate a new SLLP Client instance, returning a handle to it. This instance
@@ -114,7 +85,7 @@ enum sllp_err sllp_client_init(sllp_client_t *client);
  *
  */
 enum sllp_err sllp_get_vars_list (sllp_client_t *client,
-                                  struct sllp_vars_list **list);
+                                  struct sllp_var_info_list **list);
 
 /*
  * Returns the list of groups provided by a server in the list parameter.
@@ -134,7 +105,7 @@ enum sllp_err sllp_get_vars_list (sllp_client_t *client,
  *
  */
 enum sllp_err sllp_get_groups_list (sllp_client_t *client,
-                                    struct sllp_groups_list **list);
+                                    struct sllp_group_list **list);
 
 /*
  * Returns the list of curves provided by a server in the list parameter.
@@ -154,25 +125,7 @@ enum sllp_err sllp_get_groups_list (sllp_client_t *client,
  *
  */
 enum sllp_err sllp_get_curves_list (sllp_client_t *client,
-                                    struct sllp_curves_list **list);
-
-/*
- * Returns the current status of the server being queried.
- *
- * @param client [input] A SLLP Client Library instance
- * @param status [output] Variable that will receive a pointer to a status
- *                        structure.
- *
- * @return SLLP_SUCCESS or one of the following errors:
- * <ul>
- *   <li>SLLP_ERR_PARAM_INVALID: either client or status is a NULL pointer.
- *   </li>
- *   <li>SLLP_ERR_COMM: There was a failure either sending or receiving a
- *                      message</li>
- * </ul>
- */
-enum sllp_err sllp_get_status (sllp_client_t* client,
-                               struct sllp_status **status);
+                                    struct sllp_curve_info_list **list);
 
 /*
  * Reads the value of a variable into a caller provided buffer.

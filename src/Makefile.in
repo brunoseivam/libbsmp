@@ -83,7 +83,8 @@ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
 am__v_at_0 = @
 libsllp_a_AR = $(AR) $(ARFLAGS)
 libsllp_a_LIBADD =
-am_libsllp_a_OBJECTS = sllp.$(OBJEXT) md5.$(OBJEXT) \
+am_libsllp_a_OBJECTS = md5.$(OBJEXT) sllp.$(OBJEXT) var.$(OBJEXT) \
+	group.$(OBJEXT) curve.$(OBJEXT) func.$(OBJEXT) \
 	sllp_server.$(OBJEXT) sllp_client.$(OBJEXT)
 libsllp_a_OBJECTS = $(am_libsllp_a_OBJECTS)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
@@ -206,9 +207,14 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LIBRARIES = libsllp.a
-libsllp_a_SOURCES = sllp.h sllp.c common.h binops.h md5/md5.c md5/md5.h\
-					sllp_server.c sllp_server.h\
-					sllp_client.c sllp_client.h
+libsllp_a_SOURCES = \
+          binops.h md5/md5.c md5/md5.h\
+          sllp.h sllp.c\
+					sllp_var.h sllp_group.h sllp_curve.h sllp_func.h\
+					sllp_client.h sllp_server.h\
+					var.h group.h curve.h func.h defs.h server_defs.h\
+					var.c group.c curve.c func.c\
+					sllp_server.c sllp_client.c
 
 include_HEADERS = sllp.h sllp_client.h sllp_server.h
 all: all-am
@@ -286,10 +292,14 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/curve.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/func.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/group.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/md5.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sllp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sllp_client.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sllp_server.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/var.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

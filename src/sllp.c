@@ -1,6 +1,6 @@
 #include "sllp.h"
 
-static char* SLLP_PROTO_VERSION = "0.96";
+static char* SLLP_PROTO_VERSION = "1.00";
 
 static char* error_str[SLLP_ERR_MAX] =
 {
@@ -9,7 +9,7 @@ static char* error_str[SLLP_ERR_MAX] =
     [SLLP_ERR_PARAM_OUT_OF_RANGE]   = "A parameter was out of the acceptable"
                                       " range",
     [SLLP_ERR_OUT_OF_MEMORY]        = "Not enough memory to complete request",
-    [SLLP_ERR_DUPLICATE]            = "Object already registered",
+    [SLLP_ERR_DUPLICATE]            = "Entity already registered",
     [SLLP_ERR_COMM]                 = "Sending or receiving a message failed"
 };
 

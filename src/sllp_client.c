@@ -1,5 +1,10 @@
 #include "sllp_client.h"
-#include "common.h"
+#include "defs.h"
+
+#include "var.h"
+#include "group.h"
+#include "curve.h"
+#include "func.h"
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -8,12 +13,12 @@
 
 struct sllp_client
 {
-    bool                    initialized;
-    sllp_comm_func_t        send, recv;
-    struct sllp_vars_list   vars;
-    struct sllp_groups_list groups;
-    struct sllp_curves_list curves;
-    struct sllp_status      status;
+    bool                        initialized;
+    sllp_comm_func_t            send, recv;
+    struct sllp_var_info_list   vars;
+    struct sllp_group_list      groups;
+    struct sllp_curve_info_list curves;
+    struct sllp_func_info_list  funcs;
 };
 
 static char bin_op_code[BIN_OP_COUNT] =
@@ -28,12 +33,12 @@ static char bin_op_code[BIN_OP_COUNT] =
 
 struct sllp_message
 {
-    enum command_code   code;
-    uint32_t            payload_size;
-    uint8_t             payload[MAX_PAYLOAD];
+    uint8_t     code;
+    uint32_t    payload_size;
+    uint8_t     payload[MAX_PAYLOAD];
 };
 
-static bool vars_list_contains (struct sllp_vars_list *list,
+static bool vars_list_contains (struct sllp_var_info_list *list,
                                 struct sllp_var_info *var)
 {
     unsigned int i;
@@ -43,7 +48,7 @@ static bool vars_list_contains (struct sllp_vars_list *list,
     return false;
 }
 
-static bool groups_list_contains (struct sllp_groups_list *list,
+static bool groups_list_contains (struct sllp_group_list *list,
                                   struct sllp_group *grp)
 {
     unsigned int i;
@@ -53,7 +58,7 @@ static bool groups_list_contains (struct sllp_groups_list *list,
     return false;
 }
 
-static bool curves_list_contains (struct sllp_curves_list *list,
+static bool curves_list_contains (struct sllp_curve_info_list *list,
                                   struct sllp_curve_info *curve)
 {
     unsigned int i;
@@ -123,29 +128,19 @@ static enum sllp_err update_vars_list(sllp_client_t *client)
 
     struct sllp_message response, request =
     {
-        .code = CMD_QUERY_VARS_LIST,
+        .code = CMD_VAR_QUERY_LIST,
         .payload_size = 0
     };
 
-    if(command(client, &request, &response) || response.code != CMD_VARS_LIST)
+    if(command(client, &request, &response) || response.code != CMD_VAR_LIST)
         return SLLP_ERR_COMM;
 
-    // There are no variables in the server
-    if(!response.payload_size)
-        return SLLP_SUCCESS;
+    // Zero list
+    memset(&client->vars, 0, sizeof(client->vars));
 
     // Number of bytes in the payload corresponds to the number of vars in the
     // server
     client->vars.count = response.payload_size;
-
-    // If there was a previous list, free it
-    if(client->vars.list)
-        free(client->vars.list);
-
-    client->vars.list = malloc(client->vars.count * sizeof(*client->vars.list));
-
-    if(!client->vars.list)
-        return SLLP_ERR_OUT_OF_MEMORY;
 
     unsigned int i;
     for(i = 0; i < client->vars.count; ++i)
@@ -165,38 +160,18 @@ static enum sllp_err update_groups_list(sllp_client_t *client)
 
     struct sllp_message response, request =
     {
-        .code = CMD_QUERY_GROUPS_LIST,
+        .code = CMD_GROUP_QUERY_LIST,
         .payload_size = 0
     };
 
     if(command(client, &request, &response))
         return SLLP_ERR_COMM;
 
-    if(response.code != CMD_GROUPS_LIST)
+    if(response.code != CMD_GROUP_LIST)
         return SLLP_ERR_COMM;           // TODO: better error code
 
-    // Free previously allocated list
-    if(client->groups.list)
-    {
-        free(client->groups.list);
-        client->groups.list = NULL;
-        client->groups.count = 0;
-    }
-
-    // There are no groups in the server
-    if(!response.payload_size)
-        return SLLP_SUCCESS;
-
-    // Allocate new list
-    client->groups.list =
-            malloc(response.payload_size*sizeof(*client->groups.list));
-
-    if(!client->groups.list)
-        return SLLP_ERR_OUT_OF_MEMORY;
-
     // Zero list
-    memset(client->groups.list, 0,
-           response.payload_size*sizeof(*client->groups.list));
+    memset(&client->groups, 0, sizeof(client->groups));
 
     // Number of bytes in the payload corresponds to the number of groups in the
     // server
@@ -214,18 +189,10 @@ static enum sllp_err update_groups_list(sllp_client_t *client)
         grp->size       = 0;
         grp->writable   = response.payload[i] & WRITABLE_MASK;
         grp->vars.count = response.payload[i] & SIZE_MASK;
-        grp->vars.list  = malloc(grp->vars.count * sizeof(*grp->vars.list));
-
-        // Check vars list allocation
-        if(!grp->vars.list)
-        {
-            err_code = SLLP_ERR_OUT_OF_MEMORY;
-            goto err;
-        }
 
         // Query each group's variables list
         struct sllp_message grp_response, grp_request = {
-            .code           = CMD_QUERY_GROUP,
+            .code           = CMD_GROUP_QUERY,
             .payload_size   = 1,
             .payload        = {i}
         };
@@ -251,14 +218,7 @@ static enum sllp_err update_groups_list(sllp_client_t *client)
     return SLLP_SUCCESS;
 
 err:
-    while(i)
-        if(client->groups.list[i].vars.list)
-            free(client->groups.list[i--].vars.list);
-
-    free(client->groups.list);
     client->groups.count = 0;
-    client->groups.list  = NULL;
-
     return err_code;
 }
 
@@ -269,29 +229,18 @@ static enum sllp_err update_curves_list(sllp_client_t *client)
 
     struct sllp_message response, request =
     {
-        .code = CMD_QUERY_CURVES_LIST,
+        .code = CMD_CURVE_QUERY_LIST,
         .payload_size = 0
     };
 
-    if(command(client, &request, &response) || response.code != CMD_CURVES_LIST)
+    if(command(client, &request, &response) || response.code != CMD_CURVE_LIST)
         return SLLP_ERR_COMM;
 
-    // There are no curves in the server
-    if(!response.payload_size)
-        return SLLP_SUCCESS;
+    // Zero list
+    memset(&client->curves, 0, sizeof(client->curves));
 
     // Each 3-byte block in the response correspond to a curve
     client->curves.count = response.payload_size/CURVE_INFO_SIZE;
-
-    // If there was a previous list, free it
-    if(client->curves.list)
-        free(client->curves.list);
-
-    client->curves.list = malloc(client->curves.count *
-                                                  sizeof(*client->curves.list));
-
-    if(!client->curves.list)
-        return SLLP_ERR_OUT_OF_MEMORY;
 
     unsigned int i;
     for(i = 0; i < client->curves.count; ++i)
@@ -305,17 +254,14 @@ static enum sllp_err update_curves_list(sllp_client_t *client)
 
         struct sllp_message response_csum, request_csum =
         {
-            .code = CMD_QUERY_CURVE_CSUM,
+            .code = CMD_CURVE_QUERY_CSUM,
             .payload = {i},
             .payload_size = 1
         };
 
         if(command(client, &request_csum, &response_csum) ||
            response_csum.code != CMD_CURVE_CSUM)
-        {
-            free(client->curves.list);
-            return SLLP_ERR_COMM;
-        }
+            continue;
 
         memcpy(curve->checksum, response_csum.payload, CURVE_CSUM_SIZE);
     }
@@ -338,13 +284,13 @@ sllp_client_t *sllp_client_new (sllp_comm_func_t send_func,
     client->recv = recv_func;
 
     client->vars.count = 0;
-    client->vars.list = NULL;
+    memset(&client->vars, 0, sizeof(client->vars));
 
     client->groups.count = 0;
-    client->groups.list = NULL;
+    memset(&client->groups, 0, sizeof(client->groups));
 
     client->curves.count = 0;
-    client->curves.list = NULL;
+    memset(&client->curves, 0, sizeof(client->groups));
 
     client->initialized = false;
 
@@ -397,7 +343,7 @@ enum sllp_err sllp_client_init(sllp_client_t *client)
 }
 
 enum sllp_err sllp_get_vars_list (sllp_client_t *client,
-                                  struct sllp_vars_list **list)
+                                  struct sllp_var_info_list **list)
 {
     if(!client || !list)
         return SLLP_ERR_PARAM_INVALID;
@@ -407,7 +353,7 @@ enum sllp_err sllp_get_vars_list (sllp_client_t *client,
 }
 
 enum sllp_err sllp_get_groups_list (sllp_client_t *client,
-                                    struct sllp_groups_list **list)
+                                    struct sllp_group_list **list)
 {
     if(!client || !list)
         return SLLP_ERR_PARAM_INVALID;
@@ -417,37 +363,12 @@ enum sllp_err sllp_get_groups_list (sllp_client_t *client,
 }
 
 enum sllp_err sllp_get_curves_list (sllp_client_t *client,
-                                    struct sllp_curves_list **list)
+                                    struct sllp_curve_info_list **list)
 {
     if(!client || !list)
         return SLLP_ERR_PARAM_INVALID;
 
     *list = &client->curves;
-    return SLLP_SUCCESS;
-}
-
-enum sllp_err sllp_get_status (sllp_client_t* client,
-                               struct sllp_status **status)
-{
-    if(!client || !status)
-        return SLLP_ERR_PARAM_INVALID;
-
-    struct sllp_message response, request =
-    {
-        .code = CMD_QUERY_STATUS,
-        .payload_size = 0
-    };
-
-    if(command(client, &request, &response) || response.code != CMD_STATUS)
-        return SLLP_ERR_COMM;
-
-    client->status.size = response.payload_size;
-
-    if(response.payload_size)
-        memcpy(client->status.data, response.payload, response.payload_size);
-
-    *status = &client->status;
-
     return SLLP_SUCCESS;
 }
 
@@ -463,7 +384,7 @@ enum sllp_err sllp_read_var (sllp_client_t *client, struct sllp_var_info *var,
     // Prepare message to be sent
     struct sllp_message response, request =
     {
-        .code = CMD_READ_VAR,
+        .code = CMD_VAR_READ,
         .payload = {var->id},
         .payload_size = 1
 
@@ -472,7 +393,7 @@ enum sllp_err sllp_read_var (sllp_client_t *client, struct sllp_var_info *var,
     if(command(client, &request, &response))
         return SLLP_ERR_COMM;
 
-    if(response.code != CMD_VAR_READING)
+    if(response.code != CMD_VAR_VALUE)
         return SLLP_ERR_COMM;   //TODO: better error?
 
     // Give back answer
@@ -501,7 +422,7 @@ enum sllp_err sllp_write_var (sllp_client_t *client, struct sllp_var_info *var,
 
     // Prepare message to be sent
     struct sllp_message request = {
-        .code = CMD_WRITE_VAR,
+        .code = CMD_VAR_WRITE,
         .payload = {var->id},
         .payload_size = 1 + var->size
     }, response;
@@ -528,7 +449,7 @@ enum sllp_err sllp_read_group (sllp_client_t *client, struct sllp_group *grp,
 
     // Prepare message to be sent
     struct sllp_message response, request = {
-        .code = CMD_READ_GROUP,
+        .code = CMD_GROUP_READ,
         .payload = {grp->id},
         .payload_size = 1
     };
@@ -536,7 +457,7 @@ enum sllp_err sllp_read_group (sllp_client_t *client, struct sllp_group *grp,
     if(command(client, &request, &response))
         return SLLP_ERR_COMM;
 
-    if(response.code != CMD_VAR_READING)
+    if(response.code != CMD_GROUP_VALUES)
         return SLLP_ERR_COMM;   //TODO: better error?
 
     // Give back answer
@@ -556,7 +477,7 @@ enum sllp_err sllp_write_group (sllp_client_t *client, struct sllp_group *grp,
 
     // Prepare message to be sent
     struct sllp_message response, request = {
-        .code = CMD_WRITE_GROUP,
+        .code = CMD_GROUP_WRITE,
         .payload = {grp->id},
         .payload_size = 1 + grp->size
     };
@@ -586,7 +507,7 @@ enum sllp_err sllp_bin_op_var (sllp_client_t *client, enum sllp_bin_op op,
 
     // Prepare message to be sent
     struct sllp_message response, request = {
-        .code = CMD_BIN_OP_VAR,
+        .code = CMD_VAR_BIN_OP,
         .payload = {var->id, bin_op_code[op]},
         .payload_size = 2 + var->size
     };
@@ -616,7 +537,7 @@ enum sllp_err sllp_bin_op_group (sllp_client_t *client, enum sllp_bin_op op,
 
     // Prepare message to be sent
     struct sllp_message response, request = {
-        .code = CMD_BIN_OP_GROUP,
+        .code = CMD_GROUP_BIN_OP,
         .payload = {grp->id, bin_op_code[op]},
         .payload_size = 2 + grp->size
     };
@@ -640,7 +561,7 @@ enum sllp_err sllp_create_group (sllp_client_t *client,
 
     // Prepare message to be sent
     struct sllp_message request = {
-        .code = CMD_CREATE_GROUP,
+        .code = CMD_GROUP_CREATE,
         .payload_size = 0
     }, response;
 
@@ -674,7 +595,7 @@ enum sllp_err sllp_remove_all_groups (sllp_client_t *client)
         return SLLP_ERR_PARAM_INVALID;
 
     struct sllp_message response, request = {
-        .code = CMD_REMOVE_ALL_GROUPS,
+        .code = CMD_GROUP_REMOVE_ALL,
         .payload_size = 0
     };
 
@@ -698,7 +619,7 @@ enum sllp_err sllp_request_curve_block (sllp_client_t *client,
         return SLLP_ERR_PARAM_OUT_OF_RANGE;
 
     struct sllp_message response, request = {
-        .code = CMD_CURVE_TRANSMIT,
+        .code = CMD_CURVE_BLOCK_REQUEST,
         .payload = {curve->id, offset >> 8, offset & 0xFF},
         .payload_size = CURVE_INFO_SIZE
     };
