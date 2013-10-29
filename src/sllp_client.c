@@ -290,7 +290,7 @@ sllp_client_t *sllp_client_new (sllp_comm_func_t send_func,
     memset(&client->groups, 0, sizeof(client->groups));
 
     client->curves.count = 0;
-    memset(&client->curves, 0, sizeof(client->groups));
+    memset(&client->curves, 0, sizeof(client->curves));
 
     client->initialized = false;
 
