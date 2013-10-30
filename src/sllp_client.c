@@ -596,6 +596,8 @@ enum sllp_err sllp_remove_all_groups (sllp_client_t *client)
     if(command(client, &request, &response) || response.code != CMD_OK)
         return SLLP_ERR_COMM;
 
+    update_groups_list(client);
+
     return SLLP_SUCCESS;
 }
 
