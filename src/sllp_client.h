@@ -128,6 +128,26 @@ enum sllp_err sllp_get_curves_list (sllp_client_t *client,
                                     struct sllp_curve_info_list **list);
 
 /*
+ * Returns the list of Fcuntions, provided by a server, in the list parameter.
+ *
+ * The sllp instance MUST be previously initialized. Otherwise an empty list
+ * will be returned.
+ *
+ * @param sllp [input] A SLLP Client Library instance
+ * @param list [output] Address of the Functions list pointer
+ *
+ * @return SLLP_SUCCESS or one of the following errors:
+ * <ul>
+ *   <li>SLLP_ERR_PARAM_INVALID: either sllp or list is a NULL pointer</li>
+ *   <li>SLLP_ERR_COMM: There was a failure either sending or receiving a
+ *                      message</li>
+ * </ul>
+ *
+ */
+enum sllp_err sllp_get_funcs_list (sllp_client_t *client,
+                                   struct sllp_func_info_list **list);
+
+/*
  * Reads the value of a variable into a caller provided buffer.
  *
  * The values buffer MUST be able to hold, at least, var->size bytes.

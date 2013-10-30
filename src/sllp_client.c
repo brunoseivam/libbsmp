@@ -38,35 +38,19 @@ struct sllp_message
     uint8_t     payload[MAX_PAYLOAD];
 };
 
-static bool vars_list_contains (struct sllp_var_info_list *list,
-                                struct sllp_var_info *var)
-{
-    unsigned int i;
-    for(i = 0; i < list->count; ++i)
-        if(list->list+i == var)
-            return true;
-    return false;
-}
+#define LIST_CONTAINS(name, list_type, item_type)\
+    static bool name##_list_contains(list_type *list, item_type *item){\
+        unsigned int i;\
+        for(i = 0; i < list->count; ++i)\
+            if(list->list+i == item)\
+                return true;\
+        return false;\
+    }
 
-static bool groups_list_contains (struct sllp_group_list *list,
-                                  struct sllp_group *grp)
-{
-    unsigned int i;
-    for(i = 0; i < list->count; ++i)
-        if(list->list+i == grp)
-            return true;
-    return false;
-}
-
-static bool curves_list_contains (struct sllp_curve_info_list *list,
-                                  struct sllp_curve_info *curve)
-{
-    unsigned int i;
-    for(i = 0; i < list->count; ++i)
-        if(list->list+i == curve)
-            return true;
-    return false;
-}
+LIST_CONTAINS(vars,     struct sllp_var_info_list,      struct sllp_var_info)
+LIST_CONTAINS(groups,   struct sllp_group_list,         struct sllp_group)
+LIST_CONTAINS(curves,   struct sllp_curve_info_list,    struct sllp_curve_info)
+LIST_CONTAINS(funcs,    struct sllp_func_info_list,     struct sllp_func_info)
 
 static enum sllp_err command(sllp_client_t *client, struct sllp_message *request,
                              struct sllp_message *response)
@@ -269,6 +253,38 @@ static enum sllp_err update_curves_list(sllp_client_t *client)
     return SLLP_SUCCESS;
 }
 
+static enum sllp_err update_funcs_list(sllp_client_t *client)
+{
+    if(!client)
+        return SLLP_ERR_PARAM_INVALID;
+
+    struct sllp_message response, request =
+    {
+        .code = CMD_FUNC_QUERY_LIST,
+        .payload_size = 0
+    };
+
+    if(command(client, &request, &response) || response.code != CMD_FUNC_LIST)
+        return SLLP_ERR_COMM;
+
+    // Zero list
+    memset(&client->funcs, 0, sizeof(client->funcs));
+
+    // Number of bytes in the payload corresponds to the number of funcs in the
+    // server
+    client->funcs.count = response.payload_size;
+
+    unsigned int i;
+    for(i = 0; i < client->funcs.count; ++i)
+    {
+        client->funcs.list[i].id            = i;
+        client->funcs.list[i].input_size    = (response.payload[i] & 0xF0) >> 4;
+        client->funcs.list[i].output_size   = (response.payload[i] & 0x0F);
+    }
+
+    return SLLP_SUCCESS;
+}
+
 sllp_client_t *sllp_client_new (sllp_comm_func_t send_func,
                                 sllp_comm_func_t recv_func)
 {
@@ -291,6 +307,9 @@ sllp_client_t *sllp_client_new (sllp_comm_func_t send_func,
 
     client->curves.count = 0;
     memset(&client->curves, 0, sizeof(client->curves));
+
+    client->funcs.count = 0;
+    memset(&client->funcs, 0, sizeof(client->funcs));
 
     client->initialized = false;
 
@@ -323,39 +342,25 @@ enum sllp_err sllp_client_init(sllp_client_t *client)
     if((err = update_curves_list(client)))
         return err;
 
+    if((err = update_funcs_list(client)))
+        return err;
+
     client->initialized = true;
     return SLLP_SUCCESS;
 }
 
-enum sllp_err sllp_get_vars_list (sllp_client_t *client,
-                                  struct sllp_var_info_list **list)
-{
-    if(!client || !list)
-        return SLLP_ERR_PARAM_INVALID;
+#define SLLP_GET_LIST(name, type)\
+    enum sllp_err sllp_get_##name##_list (sllp_client_t *client, type **list) {\
+        if(!client || !list)\
+            return SLLP_ERR_PARAM_INVALID;\
+        *list = &client->name;\
+        return SLLP_SUCCESS;\
+    }
 
-    *list = &client->vars;
-    return SLLP_SUCCESS;
-}
-
-enum sllp_err sllp_get_groups_list (sllp_client_t *client,
-                                    struct sllp_group_list **list)
-{
-    if(!client || !list)
-        return SLLP_ERR_PARAM_INVALID;
-
-    *list = &client->groups;
-    return SLLP_SUCCESS;
-}
-
-enum sllp_err sllp_get_curves_list (sllp_client_t *client,
-                                    struct sllp_curve_info_list **list)
-{
-    if(!client || !list)
-        return SLLP_ERR_PARAM_INVALID;
-
-    *list = &client->curves;
-    return SLLP_SUCCESS;
-}
+SLLP_GET_LIST(vars,     struct sllp_var_info_list)
+SLLP_GET_LIST(groups,   struct sllp_group_list)
+SLLP_GET_LIST(curves,   struct sllp_curve_info_list)
+SLLP_GET_LIST(funcs,    struct sllp_func_info_list)
 
 enum sllp_err sllp_read_var (sllp_client_t *client, struct sllp_var_info *var,
                              uint8_t *value)
@@ -666,6 +671,44 @@ enum sllp_err sllp_recalc_checksum (sllp_client_t *client,
         return SLLP_ERR_COMM;
 
     update_curves_list(client);
+
+    return SLLP_SUCCESS;
+}
+
+enum sllp_err sllp_func_execute (sllp_client_t *client,
+                                 struct sllp_func_info *func, uint8_t *error,
+                                 uint8_t *input, uint8_t *output)
+{
+    if(!client || !func || !error)
+        return SLLP_ERR_PARAM_INVALID;
+
+    if(!funcs_list_contains(&client->funcs, func))
+        return SLLP_ERR_PARAM_INVALID;
+
+    if(func->input_size && !input)
+        return SLLP_ERR_PARAM_INVALID;
+
+    if(func->output_size && !output)
+        return SLLP_ERR_PARAM_INVALID;
+
+    struct sllp_message response, request = {
+        .code = CMD_FUNC_EXECUTE,
+        .payload = {func->id},
+        .payload_size = 1 + func->input_size
+    };
+
+    if(func->input_size)
+        memcpy(&request.payload[1], input, func->input_size);
+
+    if(command(client, &request, &response))
+        return SLLP_ERR_COMM;
+
+    if(response.code == CMD_FUNC_RETURN && func->output_size)
+        memcpy(output, response.payload, func->output_size);
+    else if(response.code == CMD_FUNC_ERROR)
+        *error = response.payload[0];
+    else
+        return SLLP_ERR_COMM;
 
     return SLLP_SUCCESS;
 }
