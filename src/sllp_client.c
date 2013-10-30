@@ -398,16 +398,13 @@ enum sllp_err sllp_write_var (sllp_client_t *client, struct sllp_var_info *var,
     //if(!client || !var || !value)
         //return SLLP_ERR_PARAM_INVALID;
 
-    if(!client)
-        return SLLP_ERR_PARAM_INVALID;
-
-    if(!var)
-        return SLLP_ERR_PARAM_INVALID;
-
-    if(!value)
+    if(!client || !var || !value)
         return SLLP_ERR_PARAM_INVALID;
 
     if(!vars_list_contains(&client->vars, var))
+        return SLLP_ERR_PARAM_INVALID;
+
+    if(!var->writable)
         return SLLP_ERR_PARAM_INVALID;
 
     // Prepare message to be sent
@@ -465,6 +462,9 @@ enum sllp_err sllp_write_group (sllp_client_t *client, struct sllp_group *grp,
     if(!groups_list_contains(&client->groups, grp))
         return SLLP_ERR_PARAM_INVALID;
 
+    if(!grp->writable)
+        return SLLP_ERR_PARAM_INVALID;
+
     // Prepare message to be sent
     struct sllp_message response, request = {
         .code = CMD_GROUP_WRITE,
@@ -490,6 +490,9 @@ enum sllp_err sllp_bin_op_var (sllp_client_t *client, enum sllp_bin_op op,
         return SLLP_ERR_PARAM_INVALID;
 
     if(!vars_list_contains(&client->vars, var))
+        return SLLP_ERR_PARAM_INVALID;
+
+    if(!var->writable)
         return SLLP_ERR_PARAM_INVALID;
 
     if(op >= BIN_OP_COUNT)
@@ -520,6 +523,9 @@ enum sllp_err sllp_bin_op_group (sllp_client_t *client, enum sllp_bin_op op,
         return SLLP_ERR_PARAM_INVALID;
 
     if(!groups_list_contains(&client->groups, grp))
+        return SLLP_ERR_PARAM_INVALID;
+
+    if(!grp->writable)
         return SLLP_ERR_PARAM_INVALID;
 
     if(op >= BIN_OP_COUNT)
@@ -630,6 +636,9 @@ enum sllp_err sllp_send_curve_block (sllp_client_t *client,
         return SLLP_ERR_PARAM_INVALID;
 
     if(!curves_list_contains(&client->curves, curve))
+        return SLLP_ERR_PARAM_INVALID;
+
+    if(!curve->writable)
         return SLLP_ERR_PARAM_INVALID;
 
     if(offset > curve->nblocks)
