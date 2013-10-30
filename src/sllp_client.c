@@ -302,21 +302,6 @@ enum sllp_err sllp_client_destroy (sllp_client_t *client)
     if(!client)
         return SLLP_ERR_PARAM_INVALID;
 
-    if(client->vars.list)
-        free(client->vars.list);
-
-    if(client->groups.list)
-    {
-        unsigned int i;
-        for(i = 0; i < client->groups.count; ++i)
-            if(client->groups.list[i].vars.list)
-                free(client->groups.list[i].vars.list);
-        free(client->groups.list);
-    }
-
-    if(client->curves.list)
-        free(client->curves.list);
-
     free(client);
 
     return SLLP_SUCCESS;
