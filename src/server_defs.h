@@ -6,6 +6,12 @@
 #include "sllp_server.h"
 #include "defs.h"
 
+#define MESSSAGE_SET_ANSWER(msg, code)\
+    do {\
+        (msg)->command_code = code;\
+        (msg)->payload_size = 0;\
+    }while(0)
+
 struct message
 {
     uint8_t  command_code;
@@ -35,11 +41,5 @@ struct sllp_server
     struct sllp_var *modified_list[MAX_VARIABLES+1];
     sllp_hook_t hook;
 };
-
-extern inline void message_set_answer (struct message *msg, uint8_t code)
-{
-    msg->command_code = code;
-    msg->payload_size = 0;
-}
 
 #endif

@@ -32,12 +32,12 @@ SERVER_CMD_FUNCTION (group_query_list)
     // Check payload size
     if(recv_msg->payload_size != 0)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
         return;
     }
 
     // Set answer's command_code and payload_size
-    message_set_answer(send_msg, CMD_GROUP_LIST);
+    MESSSAGE_SET_ANSWER(send_msg, CMD_GROUP_LIST);
 
     // Add each group to the response
     struct sllp_group *grp;
@@ -57,18 +57,18 @@ SERVER_CMD_FUNCTION (group_query)
     // Check payload size
     if(recv_msg->payload_size != 1)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
         return;
     }
 
     // Set answer code
-    message_set_answer(send_msg, CMD_GROUP);
+    MESSSAGE_SET_ANSWER(send_msg, CMD_GROUP);
 
     // Check ID
     uint8_t group_id = recv_msg->payload[0];
     if(group_id >= server->groups.count)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_ID);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_ID);
         return;
     }
 
@@ -87,7 +87,7 @@ SERVER_CMD_FUNCTION (group_read)
     // Check payload size
     if(recv_msg->payload_size != 1)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
         return;
     }
 
@@ -96,7 +96,7 @@ SERVER_CMD_FUNCTION (group_read)
 
     if(group_id >= server->groups.count)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_ID);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_ID);
         return;
     }
 
@@ -111,7 +111,7 @@ SERVER_CMD_FUNCTION (group_read)
     }
 
     // Iterate over group's variables
-    message_set_answer(send_msg, CMD_GROUP_VALUES);
+    MESSSAGE_SET_ANSWER(send_msg, CMD_GROUP_VALUES);
 
     struct sllp_var *var;
     unsigned int i;
@@ -130,7 +130,7 @@ SERVER_CMD_FUNCTION (group_write)
     // Check if body has at least one byte (ID)
     if(recv_msg->payload_size < 1)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
         return;
     }
 
@@ -139,7 +139,7 @@ SERVER_CMD_FUNCTION (group_write)
 
     if(group_id >= server->groups.count)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_ID);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_ID);
         return;
     }
 
@@ -149,14 +149,14 @@ SERVER_CMD_FUNCTION (group_write)
     // Check payload size
     if(recv_msg->payload_size != 1 + grp->size)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
         return;
     }
 
     // Check write permission
     if(!grp->writable)
     {
-        message_set_answer(send_msg, CMD_ERR_READ_ONLY);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_READ_ONLY);
         return;
     }
 
@@ -179,7 +179,7 @@ SERVER_CMD_FUNCTION (group_write)
         server->hook(SLLP_OP_WRITE, server->modified_list);
     }
 
-    message_set_answer(send_msg, CMD_OK);
+    MESSSAGE_SET_ANSWER(send_msg, CMD_OK);
 }
 
 SERVER_CMD_FUNCTION (group_bin_op)
@@ -187,7 +187,7 @@ SERVER_CMD_FUNCTION (group_bin_op)
     // Check if body has at least two bytes (ID + binary operation)
     if(recv_msg->payload_size < 2)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
         return;
     }
 
@@ -196,7 +196,7 @@ SERVER_CMD_FUNCTION (group_bin_op)
 
     if(group_id >= server->groups.count)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_ID);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_ID);
         return;
     }
 
@@ -209,21 +209,21 @@ SERVER_CMD_FUNCTION (group_bin_op)
     // Check operation
     if(!bin_op[operation])
     {
-        message_set_answer(send_msg, CMD_ERR_OP_NOT_SUPPORTED);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_OP_NOT_SUPPORTED);
         return;
     }
 
     // Check payload size
     if(recv_msg->payload_size != 2 + grp->size)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
         return;
     }
 
     // Check write permission
     if(!grp->writable)
     {
-        message_set_answer(send_msg, CMD_ERR_READ_ONLY);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_READ_ONLY);
         return;
     }
 
@@ -246,7 +246,7 @@ SERVER_CMD_FUNCTION (group_bin_op)
         server->hook(SLLP_OP_WRITE, server->modified_list);
     }
 
-    message_set_answer(send_msg, CMD_OK);
+    MESSSAGE_SET_ANSWER(send_msg, CMD_OK);
 }
 
 SERVER_CMD_FUNCTION (group_create)
@@ -255,14 +255,14 @@ SERVER_CMD_FUNCTION (group_create)
     if(recv_msg->payload_size < 1 ||
        recv_msg->payload_size > server->vars.count)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
         return;
     }
 
     // Check if there's available space for the new group
     if(server->groups.count == MAX_GROUPS)
     {
-        message_set_answer(send_msg, CMD_ERR_INSUFFICIENT_MEMORY);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INSUFFICIENT_MEMORY);
         return;
     }
 
@@ -280,13 +280,13 @@ SERVER_CMD_FUNCTION (group_create)
 
         if(var_id >= server->vars.count)
         {
-            message_set_answer(send_msg, CMD_ERR_INVALID_ID);
+            MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_ID);
             return;
         }
 
         if(i && (var_id <= grp->vars.list[i-1]->id))
         {
-            message_set_answer(send_msg, CMD_ERR_INVALID_ID);
+            MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_ID);
             return;
         }
 
@@ -298,7 +298,7 @@ SERVER_CMD_FUNCTION (group_create)
     ++server->groups.count;
 
     // Prepare answer
-    message_set_answer(send_msg, CMD_OK);
+    MESSSAGE_SET_ANSWER(send_msg, CMD_OK);
     return;
 }
 
@@ -306,10 +306,10 @@ SERVER_CMD_FUNCTION (group_remove_all)
 {
     if(recv_msg->payload_size != 0)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
         return;
     }
 
     server->groups.count = GROUP_STANDARD_COUNT;
-    message_set_answer(send_msg, CMD_OK);
+    MESSSAGE_SET_ANSWER(send_msg, CMD_OK);
 }

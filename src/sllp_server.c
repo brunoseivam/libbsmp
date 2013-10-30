@@ -193,11 +193,10 @@ enum sllp_err sllp_process_packet (sllp_server_t *server,
     // specified in the message header
     if(request->len < SLLP_HEADER_SIZE ||
        request->len != recv_msg.payload_size + SLLP_HEADER_SIZE)
-        message_set_answer(&send_msg, CMD_ERR_MALFORMED_MESSAGE);
-
+        MESSSAGE_SET_ANSWER(&send_msg, CMD_ERR_MALFORMED_MESSAGE);
     // Check existence of the requested command
     else if(!command[recv_msg.command_code])
-        message_set_answer(&send_msg, CMD_ERR_OP_NOT_SUPPORTED);
+        MESSSAGE_SET_ANSWER(&send_msg, CMD_ERR_OP_NOT_SUPPORTED);
     else
         command[recv_msg.command_code](server, &recv_msg, &send_msg);
 

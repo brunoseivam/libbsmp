@@ -25,11 +25,11 @@ SERVER_CMD_FUNCTION (curve_query_list)
     // Check payload size
     if(recv_msg->payload_size != 0)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
         return;
     }
 
-    message_set_answer(send_msg, CMD_CURVE_LIST);
+    MESSSAGE_SET_ANSWER(send_msg, CMD_CURVE_LIST);
 
     struct sllp_curve_info *curve;
     unsigned int i;
@@ -50,7 +50,7 @@ SERVER_CMD_FUNCTION (curve_query_csum)
     // Check payload size
     if(recv_msg->payload_size != 1)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
         return;
     }
 
@@ -58,13 +58,13 @@ SERVER_CMD_FUNCTION (curve_query_csum)
 
     if(curve_id >= server->curves.count)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_ID);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_ID);
         return;
     }
 
     struct sllp_curve *curve = server->curves.list[curve_id];
 
-    message_set_answer(send_msg, CMD_CURVE_CSUM);
+    MESSSAGE_SET_ANSWER(send_msg, CMD_CURVE_CSUM);
     memcpy(send_msg->payload, curve->info.checksum, CURVE_CSUM_SIZE);
     send_msg->payload_size = CURVE_CSUM_SIZE;
 }
@@ -74,7 +74,7 @@ SERVER_CMD_FUNCTION (curve_block_request)
     // Check payload size
     if(recv_msg->payload_size != CURVE_INFO_SIZE)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
         return;
     }
 
@@ -83,7 +83,7 @@ SERVER_CMD_FUNCTION (curve_block_request)
 
     if(curve_id >= server->curves.count)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_ID);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_ID);
         return;
     }
 
@@ -94,11 +94,11 @@ SERVER_CMD_FUNCTION (curve_block_request)
 
     if(block_offset > curve->info.nblocks)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_VALUE);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_VALUE);
         return;
     }
 
-    message_set_answer(send_msg, CMD_CURVE_BLOCK);
+    MESSSAGE_SET_ANSWER(send_msg, CMD_CURVE_BLOCK);
     send_msg->payload[0] = recv_msg->payload[0];    // Curve ID
     send_msg->payload[1] = recv_msg->payload[1];    // Offset (most sig.)
     send_msg->payload[2] = recv_msg->payload[2];    // Offset (less sig.)
@@ -111,7 +111,7 @@ SERVER_CMD_FUNCTION (curve_block)
 {
     if(recv_msg->payload_size != CURVE_PKT_SIZE)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
         return;
     }
 
@@ -120,7 +120,7 @@ SERVER_CMD_FUNCTION (curve_block)
 
     if(curve_id >= server->curves.count)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_ID);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_ID);
         return;
     }
 
@@ -130,18 +130,18 @@ SERVER_CMD_FUNCTION (curve_block)
     uint16_t block_offset = (recv_msg->payload[1] << 8) + recv_msg->payload[2];
     if(block_offset > curve->info.nblocks)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_VALUE);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_VALUE);
         return;
     }
     curve->write_block(curve, block_offset, recv_msg->payload+CURVE_INFO_SIZE);
-    message_set_answer(send_msg, CMD_OK);
+    MESSSAGE_SET_ANSWER(send_msg, CMD_OK);
 }
 
 SERVER_CMD_FUNCTION (curve_recalc_csum)
 {
     if(recv_msg->payload_size != 1)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
         return;
     }
 
@@ -150,7 +150,7 @@ SERVER_CMD_FUNCTION (curve_recalc_csum)
 
     if(curve_id >= server->curves.count)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_ID);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_ID);
         return;
     }
 
@@ -172,7 +172,7 @@ SERVER_CMD_FUNCTION (curve_recalc_csum)
     }
     MD5Final(curve->info.checksum, &md5ctx);
 
-    message_set_answer(send_msg, CMD_CURVE_CSUM);
+    MESSSAGE_SET_ANSWER(send_msg, CMD_CURVE_CSUM);
     memcpy(send_msg->payload, curve->info.checksum, CURVE_CSUM_SIZE);
     send_msg->payload_size = CURVE_CSUM_SIZE;
 }

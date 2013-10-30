@@ -25,12 +25,12 @@ SERVER_CMD_FUNCTION (var_query_list)
     // Check payload size
     if(recv_msg->payload_size != 0)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
         return;
     }
 
     // Set answer's command_code and payload_size
-    message_set_answer(send_msg, CMD_VAR_LIST);
+    MESSSAGE_SET_ANSWER(send_msg, CMD_VAR_LIST);
 
     // Variables are in order of their ID's
     struct sllp_var *var;
@@ -51,7 +51,7 @@ SERVER_CMD_FUNCTION (var_read)
     // Check payload size
     if(recv_msg->payload_size != 1)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
         return;
     }
 
@@ -60,7 +60,7 @@ SERVER_CMD_FUNCTION (var_read)
 
     if(var_id >= server->vars.count)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_ID);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_ID);
         return;
     }
 
@@ -75,7 +75,7 @@ SERVER_CMD_FUNCTION (var_read)
     }
 
     // Set answer
-    message_set_answer(send_msg, CMD_VAR_VALUE);
+    MESSSAGE_SET_ANSWER(send_msg, CMD_VAR_VALUE);
     send_msg->payload_size = var->info.size;
     memcpy(send_msg->payload, var->data, var->info.size);
 }
@@ -86,7 +86,7 @@ SERVER_CMD_FUNCTION (var_write)
     // Check payload size
     if(recv_msg->payload_size < 2)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
         return;
     }
 
@@ -95,7 +95,7 @@ SERVER_CMD_FUNCTION (var_write)
 
     if(var_id >= server->vars.count)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_ID);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_ID);
         return;
     }
 
@@ -105,14 +105,14 @@ SERVER_CMD_FUNCTION (var_write)
     // Check payload size
     if(recv_msg->payload_size != 1 + var->info.size)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
         return;
     }
 
     // Check write permission
     if(!var->info.writable)
     {
-        message_set_answer(send_msg, CMD_ERR_READ_ONLY);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_READ_ONLY);
         return;
     }
 
@@ -128,7 +128,7 @@ SERVER_CMD_FUNCTION (var_write)
     }
 
     // Set answer code
-    message_set_answer(send_msg, CMD_OK);
+    MESSSAGE_SET_ANSWER(send_msg, CMD_OK);
 }
 
 SERVER_CMD_FUNCTION (var_bin_op)
@@ -136,7 +136,7 @@ SERVER_CMD_FUNCTION (var_bin_op)
     // Check if body has at least two bytes (ID + binary operation)
     if(recv_msg->payload_size < 2)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
         return;
     }
 
@@ -145,7 +145,7 @@ SERVER_CMD_FUNCTION (var_bin_op)
 
     if(var_id >= server->vars.count)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_ID);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_ID);
         return;
     }
 
@@ -158,21 +158,21 @@ SERVER_CMD_FUNCTION (var_bin_op)
     // Check operation
     if(!bin_op[operation])
     {
-        message_set_answer(send_msg, CMD_ERR_OP_NOT_SUPPORTED);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_OP_NOT_SUPPORTED);
         return;
     }
 
     // Check payload size
     if(recv_msg->payload_size != 2 + var->info.size)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
         return;
     }
 
     // Check write permission
     if(!var->info.writable)
     {
-        message_set_answer(send_msg, CMD_ERR_READ_ONLY);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_READ_ONLY);
         return;
     }
 
@@ -188,7 +188,7 @@ SERVER_CMD_FUNCTION (var_bin_op)
     }
 
     // Set answer code
-    message_set_answer(send_msg, CMD_OK);
+    MESSSAGE_SET_ANSWER(send_msg, CMD_OK);
     return;
 }
 

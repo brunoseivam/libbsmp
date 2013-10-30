@@ -24,11 +24,11 @@ SERVER_CMD_FUNCTION (func_query_list)
     // Check payload size
     if(recv_msg->payload_size != 0)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
         return;
     }
 
-    message_set_answer(send_msg, CMD_FUNC_LIST);
+    MESSSAGE_SET_ANSWER(send_msg, CMD_FUNC_LIST);
 
     struct sllp_func_info *func_info;
     unsigned int i;
@@ -47,7 +47,7 @@ SERVER_CMD_FUNCTION (func_execute)
 {
     if(!recv_msg->payload_size)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
         return;
     }
 
@@ -55,7 +55,7 @@ SERVER_CMD_FUNCTION (func_execute)
 
     if(func_id >= server->funcs.count)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_ID);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_ID);
         return;
     }
 
@@ -63,7 +63,7 @@ SERVER_CMD_FUNCTION (func_execute)
 
     if(recv_msg->payload_size != 1 + func->info.input_size)
     {
-        message_set_answer(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
         return;
     }
 
@@ -73,13 +73,13 @@ SERVER_CMD_FUNCTION (func_execute)
 
     if(ret)
     {
-        message_set_answer(send_msg, CMD_FUNC_ERROR);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_FUNC_ERROR);
         send_msg->payload[0] = ret;
         send_msg->payload_size = 1;
     }
     else
     {
-        message_set_answer(send_msg, CMD_FUNC_RETURN);
+        MESSSAGE_SET_ANSWER(send_msg, CMD_FUNC_RETURN);
         send_msg->payload_size = func->info.output_size;
     }
 }
