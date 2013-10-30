@@ -1,7 +1,7 @@
 Full libsllp example
 ====================
 
-This is an example that attempts to show examples of use for all API calls.
+This is program that attempts to show examples of usage for all API calls.
 
 Compiling
 ---------
