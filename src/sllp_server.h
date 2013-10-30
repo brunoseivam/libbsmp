@@ -97,9 +97,6 @@ enum sllp_err sllp_register_variable (sllp_server_t *server,
  * If writable is true, the field write_block must also be filled correctly.
  * Otherwise, write_block must be NULL.
  *
- * NOTE: The field nblocks contains the number of blocks of the curve, minus 1.
- * So, if the curve has 8 blocks, for example, nblocks = 7.
- *
  * The user field is untouched.
  *
  * @param server [input] Handle to the server instance.
@@ -108,6 +105,9 @@ enum sllp_err sllp_register_variable (sllp_server_t *server,
  * @return SLLP_SUCCESS or one of the following errors:
  * <ul>
  *   <li>SLLP_ERR_PARAM_INVALID: either server or curve is a NULL pointer.</li>
+ *   <li>SLLP_ERR_PARAM_INVALID: curve->info.nblocks less than
+ *                               SLLP_CURVE_MIN_BLOCKS or greater than
+ *                               SLLP_CURVE_MAX_BLOCKS.</li>
  *   <li>SLLP_ERR_PARAM_INVALID: curve->read_block is NULL.</li>
  *   <li>SLLP_ERR_PARAM_INVALID: curve->writable is true and curve->write_block
  *                               is NULL.</li>

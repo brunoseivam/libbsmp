@@ -4,6 +4,9 @@
 #include "sllp.h"
 #include <stdint.h>
 
+#define SLLP_CURVE_MIN_BLOCKS   1
+#define SLLP_CURVE_MAX_BLOCKS   65536
+
 #define SLLP_CURVE_BLOCK_SIZE   16384
 #define SLLP_CURVE_BLOCK_INFO   3
 #define SLLP_CURVE_BLOCK_PKT    (SLLP_CURVE_BLOCK_INFO + SLLP_CURVE_BLOCK_SIZE)
@@ -12,7 +15,7 @@ struct sllp_curve_info
 {
     uint8_t  id;                    // ID of the curve, used in the protocol.
     bool     writable;              // Determine if the curve is writable.
-    uint16_t nblocks;               // How many 16kB blocks the curve contains.
+    uint32_t nblocks;               // How many 16kB blocks the curve contains.
     uint8_t  checksum[16];          // MD5 checksum of the curve
 };
 

@@ -11,6 +11,10 @@ enum sllp_err curve_check(struct sllp_curve *curve)
     if(!curve)
         return SLLP_ERR_PARAM_INVALID;
 
+    if(curve->info.nblocks < SLLP_CURVE_MIN_BLOCKS ||
+       curve->info.nblocks > SLLP_CURVE_MAX_BLOCKS)
+        return SLLP_ERR_PARAM_INVALID;
+
     if(!curve->read_block)
         return SLLP_ERR_PARAM_INVALID;
 
@@ -37,9 +41,11 @@ SERVER_CMD_FUNCTION (curve_query_list)
     {
         curve = &server->curves.list[i]->info;
 
+        uint32_t nblocks = curve->nblocks - 1;
+
         send_msg->payload[i*CURVE_INFO_SIZE]     = curve->writable;
-        send_msg->payload[i*CURVE_INFO_SIZE + 1] = curve->nblocks >> 8;
-        send_msg->payload[i*CURVE_INFO_SIZE + 2] = curve->nblocks & 0xFF;
+        send_msg->payload[i*CURVE_INFO_SIZE + 1] = nblocks >> 8;
+        send_msg->payload[i*CURVE_INFO_SIZE + 2] = nblocks & 0xFF;
     }
 
     send_msg->payload_size = server->curves.count*CURVE_INFO_SIZE;
@@ -92,7 +98,7 @@ SERVER_CMD_FUNCTION (curve_block_request)
 
     uint16_t block_offset = (recv_msg->payload[1] << 8) + recv_msg->payload[2];
 
-    if(block_offset > curve->info.nblocks)
+    if(block_offset >= curve->info.nblocks)
     {
         MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_VALUE);
         return;
@@ -128,7 +134,7 @@ SERVER_CMD_FUNCTION (curve_block)
     struct sllp_curve *curve = server->curves.list[curve_id];
 
     uint16_t block_offset = (recv_msg->payload[1] << 8) + recv_msg->payload[2];
-    if(block_offset > curve->info.nblocks)
+    if(block_offset >= curve->info.nblocks)
     {
         MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_VALUE);
         return;
@@ -158,14 +164,13 @@ SERVER_CMD_FUNCTION (curve_recalc_csum)
     struct sllp_curve *curve = server->curves.list[curve_id];
 
     // Calculate checksum (this might take a while)
-    unsigned int nblocks = curve->info.nblocks + 1;
     uint8_t block[CURVE_BLOCK_SIZE];
     MD5_CTX md5ctx;
 
     MD5Init(&md5ctx);
 
     unsigned int i;
-    for(i = 0; i < nblocks; ++i)
+    for(i = 0; i < curve->info.nblocks; ++i)
     {
         curve->read_block(curve, (uint16_t)i, block);
         MD5Update(&md5ctx, block, CURVE_BLOCK_SIZE);
