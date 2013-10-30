@@ -375,5 +375,32 @@ enum sllp_err sllp_send_curve_block (sllp_client_t *client,
 enum sllp_err sllp_recalc_checksum (sllp_client_t *client,
                                     struct sllp_curve_info *curve);
 
+/*
+ * Request a function to be executed.
+ *
+ * @param client [input] A SLLP Client Library instance
+ * @param func [input] The function to be executed
+ * @param error [output] A pointer to an uint8_t that will hold the returned
+ *                       error (if an error occurred) or zero otherwise.
+ * @param input [input] An array of values to be passed as input. Necessary if
+ *                      func->input_bytes > 0.
+ * @param output [output] An array of uint8_t that will hold the output of the
+ *                        function. Necessary if func->ouput_bytes > 0.
+ *
+ * @return SLLP_SUCCESS or one of the following errors:
+ * <ul>
+ *   <li>SLLP_ERR_PARAM_INVALID: either client, func or error is a NULL pointer
+ *   </li>
+ *   <li>SLLP_ERR_PARAM_INVALID: input is NULL but func->input_size isn't 0</li>
+ *   <li>SLLP_ERR_PARAM_INVALID: output is NULL but func->output_size isn't
+ *                               0</li>
+ *   <li>SLLP_ERR_COMM: There was a failure either sending or receiving a
+ *                      message</li>
+ * </ul>
+ */
+enum sllp_err sllp_func_execute (sllp_client_t *client,
+                                 struct sllp_func_info *func, uint8_t *error,
+                                 uint8_t *input, uint8_t *output);
+
 #endif
 

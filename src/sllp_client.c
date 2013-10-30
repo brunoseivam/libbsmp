@@ -712,6 +712,7 @@ enum sllp_err sllp_func_execute (sllp_client_t *client,
     if(command(client, &request, &response))
         return SLLP_ERR_COMM;
 
+    *error = 0;
     if(response.code == CMD_FUNC_RETURN && func->output_size)
         memcpy(output, response.payload, func->output_size);
     else if(response.code == CMD_FUNC_ERROR)
