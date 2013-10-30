@@ -550,9 +550,9 @@ enum sllp_err sllp_bin_op_group (sllp_client_t *client, enum sllp_bin_op op,
 }
 
 enum sllp_err sllp_create_group (sllp_client_t *client,
-                                 struct sllp_var_info **vars_list)
+                                 struct sllp_var_info **list)
 {
-    if(!client || !vars_list || !(*vars_list))
+    if(!client || !list || !(*list))
         return SLLP_ERR_PARAM_INVALID;
 
     // Prepare message to be sent
@@ -561,14 +561,12 @@ enum sllp_err sllp_create_group (sllp_client_t *client,
         .payload_size = 0
     }, response;
 
-    struct sllp_var_info *varp = vars_list[request.payload_size];
-
-    while(varp && (request.payload_size < client->vars.count))
+    while(*list)
     {
-        if(!vars_list_contains(&client->vars, varp))
+        if(!vars_list_contains(&client->vars, *list))
             return SLLP_ERR_PARAM_INVALID;
 
-        request.payload[request.payload_size++] = (varp++)->id;
+        request.payload[request.payload_size++] = (*(list++))->id;
     }
 
     if(!request.payload_size)
