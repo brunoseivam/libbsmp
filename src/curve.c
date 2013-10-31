@@ -140,6 +140,7 @@ SERVER_CMD_FUNCTION (curve_block)
         return;
     }
     curve->write_block(curve, block_offset, recv_msg->payload+CURVE_INFO_SIZE);
+    memset(curve->info.checksum, 0, sizeof(curve->info.checksum));
     MESSSAGE_SET_ANSWER(send_msg, CMD_OK);
 }
 
