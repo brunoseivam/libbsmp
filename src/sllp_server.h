@@ -2,6 +2,10 @@
 #define SLLP_SERVER_H
 
 #include "sllp.h"
+#include "sllp_var.h"
+#include "sllp_group.h"
+#include "sllp_curve.h"
+#include "sllp_func.h"
 
 // Types
 
@@ -61,25 +65,6 @@ sllp_server_t *sllp_server_new_from_pool (void);
 enum sllp_err sllp_server_destroy (sllp_server_t *server);
 
 /**
- * Register a sllp_status structure that is sent to the client whenever a
- * CMD_QUERY_STATUS is received. The structure must represent, at least, 1 byte
- * of data and, at most, 254 bytes of data.
- *
- * @param server [input] Handle to the instance.
- * @param status [input] Structure describing the status information.
- *
- * @return SLLP_SUCCESS or one of the following errors:
- * <ul>
- *   <li> SLLP_ERR_PARAM_INVALID: either server or status is a NULL pointer.
- *   </li>
- *   <li> SLLP_PARAM_OUT_OF_RANGE: status->size is less than 1 or greater than
- *                                 64. </li>
- * </ul>
- */
-enum sllp_err sllp_register_status (sllp_server_t *server,
-                                    struct sllp_status *status);
-
-/**
  * Register a variable with a server instance. The memory pointed by the var
  * parameter must remain valid throughout the entire lifespan of the server
  * instance. The id field of the var parameter will be written by the SLLP lib.
@@ -112,17 +97,17 @@ enum sllp_err sllp_register_variable (sllp_server_t *server,
  * If writable is true, the field write_block must also be filled correctly.
  * Otherwise, write_block must be NULL.
  *
- * NOTE: The field nblocks contains the number of blocks of the curve, minus 1.
- * So, if the curve has 8 blocks, for example, nblocks = 7.
- *
  * The user field is untouched.
  *
  * @param server [input] Handle to the server instance.
- * @param curve [input] Poiner to the curve to be registered.
+ * @param curve [input] Pointer to the curve to be registered.
  *
  * @return SLLP_SUCCESS or one of the following errors:
  * <ul>
  *   <li>SLLP_ERR_PARAM_INVALID: either server or curve is a NULL pointer.</li>
+ *   <li>SLLP_ERR_PARAM_INVALID: curve->info.nblocks less than
+ *                               SLLP_CURVE_MIN_BLOCKS or greater than
+ *                               SLLP_CURVE_MAX_BLOCKS.</li>
  *   <li>SLLP_ERR_PARAM_INVALID: curve->read_block is NULL.</li>
  *   <li>SLLP_ERR_PARAM_INVALID: curve->writable is true and curve->write_block
  *                               is NULL.</li>
@@ -132,6 +117,33 @@ enum sllp_err sllp_register_variable (sllp_server_t *server,
  */
 enum sllp_err sllp_register_curve (sllp_server_t *server,
                                    struct sllp_curve *curve);
+
+/**
+ * Register a function with a SLLP instance. The memory pointed by the func
+ * parameter must remain valid throughout the entire lifespan of the server
+ * instance. The info.id field of the func parameter will be written by the
+ * SLLP lib.
+ *
+ * The fields func_p, info.input_size and info.output_size must be filled
+ * correctly. info.input_size must be less than or equal to SLLP_FUNC_MAX_INPUT.
+ * Likewise, info.output_size must be less than or equal to
+ * SLLP_FUNC_MAS_OUTPUT.
+ *
+ * @param server [input] Handle to the server instance.
+ * @param func [input] Pointer to the function to be registered.
+ *
+ * @return SLLP_SUCCESS or one of the following errors:
+ * <ul>
+ *   <li>SLLP_ERR_PARAM_INVALID: either server or func is a NULL pointer.</li>
+ *   <li>SLLP_ERR_PARAM_INVALID: func->func_p is NULL.</li>
+ *   <li>SLLP_ERR_PARAM_OUT_OF_RANGE: info.input_size is greater than
+ *                                    SLLP_FUNC_MAX_INPUT.
+ *   <li>SLLP_ERR_PARAM_OUT_OF_RANGE: info.output_size is greater than
+ *                                    SLLP_FUNC_MAX_OUTPUT.
+ * </ul>
+ */
+enum sllp_err sllp_register_function (sllp_server_t *server,
+                                      struct sllp_func *func);
 
 /**
  * Register a function that will be called in two moments:

@@ -2,6 +2,10 @@
 #define SLLP_CLIENT_H
 
 #include "sllp.h"
+#include "sllp_var.h"
+#include "sllp_group.h"
+#include "sllp_curve.h"
+#include "sllp_func.h"
 
 // Types
 
@@ -11,39 +15,6 @@ typedef struct sllp_client sllp_client_t;
 // Communication function (send and receive data). Must return 0 if successful
 // and anything but 0 otherwise.
 typedef int (*sllp_comm_func_t) (uint8_t* data, uint32_t *count);
-
-// Structures representing 'objects' manipulated by the client library
-struct sllp_vars_list
-{
-    struct sllp_var_info *list;
-    uint32_t count;
-};
-
-struct sllp_group
-{
-    uint8_t               id;           // ID of the group
-    bool                  writable;     // Whether all variables in the group
-                                        // are writable
-    struct
-    {
-        struct sllp_var_info** list;    // List of variables in the group
-        uint32_t               count;   // Number of variables in the group
-    }vars;
-    uint8_t               size;         // Sum of the sizes of all variables in
-                                        // the group
-};
-
-struct sllp_groups_list
-{
-    struct sllp_group *list;
-    uint32_t count;
-};
-
-struct sllp_curves_list
-{
-    struct sllp_curve_info *list;
-    uint32_t count;
-};
 
 /**
  * Allocate a new SLLP Client instance, returning a handle to it. This instance
@@ -114,7 +85,7 @@ enum sllp_err sllp_client_init(sllp_client_t *client);
  *
  */
 enum sllp_err sllp_get_vars_list (sllp_client_t *client,
-                                  struct sllp_vars_list **list);
+                                  struct sllp_var_info_list **list);
 
 /*
  * Returns the list of groups provided by a server in the list parameter.
@@ -134,7 +105,7 @@ enum sllp_err sllp_get_vars_list (sllp_client_t *client,
  *
  */
 enum sllp_err sllp_get_groups_list (sllp_client_t *client,
-                                    struct sllp_groups_list **list);
+                                    struct sllp_group_list **list);
 
 /*
  * Returns the list of curves provided by a server in the list parameter.
@@ -154,25 +125,27 @@ enum sllp_err sllp_get_groups_list (sllp_client_t *client,
  *
  */
 enum sllp_err sllp_get_curves_list (sllp_client_t *client,
-                                    struct sllp_curves_list **list);
+                                    struct sllp_curve_info_list **list);
 
 /*
- * Returns the current status of the server being queried.
+ * Returns the list of Fcuntions, provided by a server, in the list parameter.
  *
- * @param client [input] A SLLP Client Library instance
- * @param status [output] Variable that will receive a pointer to a status
- *                        structure.
+ * The sllp instance MUST be previously initialized. Otherwise an empty list
+ * will be returned.
+ *
+ * @param sllp [input] A SLLP Client Library instance
+ * @param list [output] Address of the Functions list pointer
  *
  * @return SLLP_SUCCESS or one of the following errors:
  * <ul>
- *   <li>SLLP_ERR_PARAM_INVALID: either client or status is a NULL pointer.
- *   </li>
+ *   <li>SLLP_ERR_PARAM_INVALID: either sllp or list is a NULL pointer</li>
  *   <li>SLLP_ERR_COMM: There was a failure either sending or receiving a
  *                      message</li>
  * </ul>
+ *
  */
-enum sllp_err sllp_get_status (sllp_client_t* client,
-                               struct sllp_status **status);
+enum sllp_err sllp_get_funcs_list (sllp_client_t *client,
+                                   struct sllp_func_info_list **list);
 
 /*
  * Reads the value of a variable into a caller provided buffer.
@@ -253,18 +226,6 @@ enum sllp_err sllp_read_group (sllp_client_t *client, struct sllp_group *grp,
  */
 enum sllp_err sllp_write_group (sllp_client_t *client, struct sllp_group *grp,
                                 uint8_t *values);
-
-enum sllp_bin_op
-{
-    BIN_OP_AND,
-    BIN_OP_OR,
-    BIN_OP_XOR,
-    BIN_OP_SET,
-    BIN_OP_CLEAR,
-    BIN_OP_TOGGLE,
-
-    BIN_OP_COUNT,   // Number of binary operations
-};
 
 /*
  * Perform a binary operation in a variable with the bits specified by the mask.
@@ -413,6 +374,33 @@ enum sllp_err sllp_send_curve_block (sllp_client_t *client,
  */
 enum sllp_err sllp_recalc_checksum (sllp_client_t *client,
                                     struct sllp_curve_info *curve);
+
+/*
+ * Request a function to be executed.
+ *
+ * @param client [input] A SLLP Client Library instance
+ * @param func [input] The function to be executed
+ * @param error [output] A pointer to an uint8_t that will hold the returned
+ *                       error (if an error occurred) or zero otherwise.
+ * @param input [input] An array of values to be passed as input. Necessary if
+ *                      func->input_bytes > 0.
+ * @param output [output] An array of uint8_t that will hold the output of the
+ *                        function. Necessary if func->ouput_bytes > 0.
+ *
+ * @return SLLP_SUCCESS or one of the following errors:
+ * <ul>
+ *   <li>SLLP_ERR_PARAM_INVALID: either client, func or error is a NULL pointer
+ *   </li>
+ *   <li>SLLP_ERR_PARAM_INVALID: input is NULL but func->input_size isn't 0</li>
+ *   <li>SLLP_ERR_PARAM_INVALID: output is NULL but func->output_size isn't
+ *                               0</li>
+ *   <li>SLLP_ERR_COMM: There was a failure either sending or receiving a
+ *                      message</li>
+ * </ul>
+ */
+enum sllp_err sllp_func_execute (sllp_client_t *client,
+                                 struct sllp_func_info *func, uint8_t *error,
+                                 uint8_t *input, uint8_t *output);
 
 #endif
 
