@@ -32,7 +32,7 @@ enum sllp_bin_op
 };
 
 typedef void (*bin_op_function) (uint8_t *data, uint8_t *mask, uint8_t size);
-bin_op_function bin_op[256];
+extern bin_op_function bin_op[256];
 
 enum sllp_err
 {
