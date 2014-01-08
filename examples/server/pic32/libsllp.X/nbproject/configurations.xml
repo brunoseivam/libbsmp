@@ -7,11 +7,19 @@
       <logicalFolder name="f1" displayName="md5" projectFiles="true">
         <itemPath>../../../../src/md5/md5.h</itemPath>
       </logicalFolder>
-      <itemPath>../../../../src/common.h</itemPath>
-      <itemPath>../../../../src/binops.h</itemPath>
       <itemPath>../../../../src/sllp.h</itemPath>
       <itemPath>../../../../src/sllp_client.h</itemPath>
       <itemPath>../../../../src/sllp_server.h</itemPath>
+      <itemPath>../../../../src/curve.h</itemPath>
+      <itemPath>../../../../src/defs.h</itemPath>
+      <itemPath>../../../../src/func.h</itemPath>
+      <itemPath>../../../../src/group.h</itemPath>
+      <itemPath>../../../../src/server_defs.h</itemPath>
+      <itemPath>../../../../src/sllp_curve.h</itemPath>
+      <itemPath>../../../../src/sllp_func.h</itemPath>
+      <itemPath>../../../../src/sllp_group.h</itemPath>
+      <itemPath>../../../../src/sllp_var.h</itemPath>
+      <itemPath>../../../../src/var.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -26,6 +34,10 @@
       <itemPath>../../../../src/sllp.c</itemPath>
       <itemPath>../../../../src/sllp_client.c</itemPath>
       <itemPath>../../../../src/sllp_server.c</itemPath>
+      <itemPath>../../../../src/curve.c</itemPath>
+      <itemPath>../../../../src/func.c</itemPath>
+      <itemPath>../../../../src/group.c</itemPath>
+      <itemPath>../../../../src/var.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -33,6 +45,9 @@
       <itemPath>Makefile</itemPath>
     </logicalFolder>
   </logicalFolder>
+  <sourceRootList>
+    <Elem>../../../../src</Elem>
+  </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
     <conf name="default" type="3">
