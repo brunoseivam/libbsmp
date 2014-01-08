@@ -19,6 +19,15 @@
         type list[max];\
     }
 
+#define SLLP_VERSION_STR_MAX_LEN 20
+struct sllp_version
+{
+    uint8_t major;
+    uint8_t minor;
+    uint8_t revision;
+    char    str[SLLP_VERSION_STR_MAX_LEN];
+};
+
 enum sllp_bin_op
 {
     BIN_OP_AND,

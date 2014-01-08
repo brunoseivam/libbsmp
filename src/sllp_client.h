@@ -68,6 +68,18 @@ enum sllp_err sllp_client_destroy (sllp_client_t *client);
 enum sllp_err sllp_client_init(sllp_client_t *client);
 
 /*
+ * Returns a pointer to a struct describing the server version of the protocol.
+ *
+ * The sllp instance MUST be previously initialized. Otherwise NULL will be
+ * returned.
+ *
+ * @param client [input] A SLLP Client Library instance
+ *
+ * @return A pointer to a struct sllp_version or NULL in case of error.
+ */
+struct sllp_version *sllp_get_version(sllp_client_t *client);
+
+/*
  * Returns the list of variables provided by a server in the list parameter.
  *
  * The sllp instance MUST be previously initialized. Otherwise an empty list
@@ -186,6 +198,34 @@ enum sllp_err sllp_read_var (sllp_client_t *client, struct sllp_var_info *var,
  */
 enum sllp_err sllp_write_var (sllp_client_t *client, struct sllp_var_info *var,
                               uint8_t *value);
+
+/*
+ * Writes values to a variable from a caller provided buffer and reads a
+ * variable to a caller provided buffer in just one protocol command.
+ *
+ * The values buffer MUST contain, at least, var->size bytes for each var.
+ *
+ * @param client [input] A SLLP Client Library instance
+ * @param write_var [input] The variable to be written
+ * @param write_value [input] Pointer to a buffer containing the values to be
+ *                            written
+ * @param read_var [input] The variable to be read
+ * @param read_value [output] Pointer to a buffer to contain the read values
+ *
+ * @return SLLP_SUCCESS or one of the following errors:
+ * <ul>
+ *   <li>SLLP_ERR_PARAM_INVALID: at least one parameter was a NULL pointer</li>
+ *   <li>SLLP_ERR_PARAM_INVALID: write_var or read_var is not a valid server
+ *                               variable</li>
+ *   <li>SLLP_ERR_COMM: There was a failure either sending or receiving a
+ *                      message</li>
+ * </ul>
+ */
+enum sllp_err sllp_write_read_vars (sllp_client_t *client,
+                                    struct sllp_var_info *write_var,
+                                    uint8_t *write_value,
+                                    struct sllp_var_info *read_var,
+                                    uint8_t *read_value);
 
 /*
  * Reads the values of a group of variables into a caller provided buffer.

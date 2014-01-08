@@ -6,6 +6,7 @@
 #include "curve.h"
 #include "func.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -15,6 +16,7 @@ struct sllp_client
 {
     bool                        initialized;
     sllp_comm_func_t            send, recv;
+    struct sllp_version         server_version;
     struct sllp_var_info_list   vars;
     struct sllp_group_list      groups;
     struct sllp_curve_info_list curves;
@@ -101,6 +103,41 @@ static enum sllp_err command(sllp_client_t *client, struct sllp_message *request
 
     // Copy response
     memcpy(response->payload, &recv_buf.data[2], recv_buf.size);
+
+    return SLLP_SUCCESS;
+}
+
+static enum sllp_err get_version(sllp_client_t *client)
+{
+    if(!client)
+        return SLLP_ERR_PARAM_INVALID;
+
+    struct sllp_message response, request =
+    {
+        .code = CMD_QUERY_VERSION,
+        .payload_size = 0
+    };
+
+    if(command(client, &request, &response))
+        return SLLP_ERR_COMM;
+
+    // Special case: v1.0
+    if(response.code == CMD_ERR_OP_NOT_SUPPORTED)
+    {
+        client->server_version.major    = 1;
+        client->server_version.minor    = 0;
+        client->server_version.revision = 0;
+    }
+    else
+    {
+        client->server_version.major    = response.payload[0];
+        client->server_version.minor    = response.payload[1];
+        client->server_version.revision = response.payload[2];
+    }
+
+    struct sllp_version *v = &client->server_version;
+    snprintf(v->str, SLLP_VERSION_STR_MAX_LEN, "%d.%02d.%03d", v->major,
+             v->minor, v->revision);
 
     return SLLP_SUCCESS;
 }
@@ -333,6 +370,9 @@ enum sllp_err sllp_client_init(sllp_client_t *client)
 
     enum sllp_err err;
 
+    if((err = get_version(client)))
+        return err;
+
     if((err = update_vars_list(client)))
         return err;
 
@@ -361,6 +401,13 @@ SLLP_GET_LIST(vars,     struct sllp_var_info_list)
 SLLP_GET_LIST(groups,   struct sllp_group_list)
 SLLP_GET_LIST(curves,   struct sllp_curve_info_list)
 SLLP_GET_LIST(funcs,    struct sllp_func_info_list)
+
+struct sllp_version *sllp_get_version(sllp_client_t *client)
+{
+    if(client)
+        return &client->server_version;
+    return NULL;
+}
 
 enum sllp_err sllp_read_var (sllp_client_t *client, struct sllp_var_info *var,
                              uint8_t *value)
@@ -395,9 +442,6 @@ enum sllp_err sllp_read_var (sllp_client_t *client, struct sllp_var_info *var,
 enum sllp_err sllp_write_var (sllp_client_t *client, struct sllp_var_info *var,
                               uint8_t *value)
 {
-    //if(!client || !var || !value)
-        //return SLLP_ERR_PARAM_INVALID;
-
     if(!client || !var || !value)
         return SLLP_ERR_PARAM_INVALID;
 
@@ -421,6 +465,41 @@ enum sllp_err sllp_write_var (sllp_client_t *client, struct sllp_var_info *var,
 
     if(response.code != CMD_OK)
        return SLLP_ERR_COMM;   //TODO: better error?
+
+    return SLLP_SUCCESS;
+}
+
+enum sllp_err sllp_write_read_vars (sllp_client_t *client,
+                                    struct sllp_var_info *write_var,
+                                    uint8_t *write_value,
+                                    struct sllp_var_info *read_var,
+                                    uint8_t *read_value)
+{
+    if(!(client && write_var && write_value && read_var && read_value))
+        return SLLP_ERR_PARAM_INVALID;
+
+    if(!vars_list_contains(&client->vars, write_var) || !write_var->writable)
+        return SLLP_ERR_PARAM_INVALID;
+
+    if(!vars_list_contains(&client->vars, read_var))
+        return SLLP_ERR_PARAM_INVALID;
+
+    // Prepare message to be sent
+    struct sllp_message request = {
+        .code = CMD_VAR_WRITE_READ,
+        .payload = {write_var->id, read_var->id},
+        .payload_size = 2 + write_var->size
+    }, response;
+
+    memcpy(&request.payload[2], write_value, write_var->size);
+
+    if(command(client, &request, &response))
+       return SLLP_ERR_COMM;
+
+    if(response.code != CMD_VAR_VALUE)
+       return SLLP_ERR_COMM;   //TODO: better error?
+
+    memcpy(read_value, response.payload, read_var->size);
 
     return SLLP_SUCCESS;
 }
