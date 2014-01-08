@@ -15,6 +15,7 @@ enum var_cmd
     CMD_VAR_VALUE           = 0x11,
     CMD_VAR_WRITE           = 0x20,
     CMD_VAR_BIN_OP          = 0x24,
+    CMD_VAR_WRITE_READ      = 0x26,
 };
 
 enum sllp_err var_check (struct sllp_var *var);
@@ -22,12 +23,14 @@ enum sllp_err var_check (struct sllp_var *var);
 SERVER_CMD_FUNCTION (var_query_list);
 SERVER_CMD_FUNCTION (var_read);
 SERVER_CMD_FUNCTION (var_write);
+SERVER_CMD_FUNCTION (var_write_read);
 SERVER_CMD_FUNCTION (var_bin_op);
 
 #define VAR_CMD_POINTERS \
         [CMD_VAR_QUERY_LIST]    = var_query_list,\
         [CMD_VAR_READ]          = var_read,\
         [CMD_VAR_WRITE]         = var_write,\
-        [CMD_VAR_BIN_OP]        = var_bin_op
+        [CMD_VAR_BIN_OP]        = var_bin_op,\
+        [CMD_VAR_WRITE_READ]    = var_write_read
 
 #endif

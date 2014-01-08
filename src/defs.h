@@ -25,6 +25,8 @@
 
 enum command_code
 {
+    CMD_QUERY_VERSION = 0x00,
+    CMD_VERSION,
     CMD_OK = 0xE0,
     CMD_ERR_MALFORMED_MESSAGE,
     CMD_ERR_OP_NOT_SUPPORTED,

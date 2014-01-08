@@ -1,6 +1,11 @@
 #include "sllp_server.h"
 #include "server_defs.h"
 
+#define VERSION     1
+#define SUBVERSION  10
+#define REVISION    0   // unused
+
+
 // Entities
 #include "var.h"
 #include "group.h"
@@ -151,6 +156,24 @@ enum sllp_err sllp_register_hook(sllp_server_t* server, sllp_hook_t hook)
     return SLLP_SUCCESS;
 }
 
+SERVER_CMD_FUNCTION (query_version)
+{
+    // Check payload size
+    if(recv_msg->payload_size != 0)
+    {
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
+        return;
+    }
+
+    // Set answer's command_code and payload_size
+    MESSSAGE_SET_ANSWER(send_msg, CMD_VERSION);
+
+    send_msg->payload_size = 3;
+    send_msg->payload[0] = VERSION;
+    send_msg->payload[1] = SUBVERSION;
+    send_msg->payload[2] = REVISION;
+}
+
 struct raw_message
 {
     uint8_t command_code;
@@ -160,6 +183,7 @@ struct raw_message
 
 static command_function_t command[256] =
 {
+    [CMD_QUERY_VERSION] = query_version,
     VAR_CMD_POINTERS,
     GROUP_CMD_POINTERS,
     CURVE_CMD_POINTERS,

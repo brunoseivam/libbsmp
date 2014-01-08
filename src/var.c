@@ -82,7 +82,6 @@ SERVER_CMD_FUNCTION (var_read)
 
 SERVER_CMD_FUNCTION (var_write)
 {
-    // Check if body has at least one byte bytes (ID)
     // Check payload size
     if(recv_msg->payload_size < 2)
     {
@@ -129,6 +128,64 @@ SERVER_CMD_FUNCTION (var_write)
 
     // Set answer code
     MESSSAGE_SET_ANSWER(send_msg, CMD_OK);
+}
+
+SERVER_CMD_FUNCTION (var_write_read)
+{
+    // Check payload size
+    if(recv_msg->payload_size < 3)
+    {
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
+        return;
+    }
+
+    // Check ID
+    uint8_t var_wr_id = recv_msg->payload[0];
+    uint8_t var_rd_id = recv_msg->payload[1];
+
+    if(var_wr_id >= server->vars.count || var_rd_id >= server->vars.count)
+    {
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_ID);
+        return;
+    }
+
+    // Get desired vars
+    struct sllp_var *var_wr = server->vars.list[var_wr_id];
+    struct sllp_var *var_rd = server->vars.list[var_rd_id];
+
+    // Check payload size
+    if(recv_msg->payload_size != 2 + var_wr->info.size)
+    {
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
+        return;
+    }
+
+    // Check write permission
+    if(!var_wr->info.writable)
+    {
+        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_READ_ONLY);
+        return;
+    }
+
+    // Everything is OK, perform WRITE operation
+    memcpy(var_wr->data, recv_msg->payload + 2, var_wr->info.size);
+
+    // Call hooks
+    if(server->hook)
+    {
+        // Write hook
+        server->modified_list[0] = var_wr;
+        server->modified_list[1] = NULL;
+        server->hook(SLLP_OP_WRITE, server->modified_list);
+
+        server->modified_list[0] = var_rd;
+        server->hook(SLLP_OP_READ, server->modified_list);
+    }
+
+    // Now perform READ operation
+    MESSSAGE_SET_ANSWER(send_msg, CMD_VAR_VALUE);
+    send_msg->payload_size = var_rd->info.size;
+    memcpy(send_msg->payload, var_rd->data, var_rd->info.size);
 }
 
 SERVER_CMD_FUNCTION (var_bin_op)
