@@ -15,7 +15,7 @@ enum var_cmd
     CMD_VAR_VALUE           = 0x11,
     CMD_VAR_WRITE           = 0x20,
     CMD_VAR_BIN_OP          = 0x24,
-    CMD_VAR_WRITE_READ      = 0x26,
+    CMD_VAR_WRITE_READ      = 0x28,
 };
 
 enum sllp_err var_check (struct sllp_var *var);
