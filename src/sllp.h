@@ -5,7 +5,7 @@
 #include <stdbool.h>
 
 #define SLLP_HEADER_SIZE        2
-#define SLLP_MAX_PAYLOAD        SLLP_CURVE_BLOCK_PKT
+#define SLLP_MAX_PAYLOAD        16387
 #define SLLP_MAX_MESSAGE        (SLLP_HEADER_SIZE+SLLP_MAX_PAYLOAD)
 
 #define SLLP_MAX_VARIABLES      128
