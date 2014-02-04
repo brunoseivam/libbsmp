@@ -172,14 +172,10 @@ SERVER_CMD_FUNCTION (group_write)
 
         // Check payload value
         if(var->value_ok && !var->value_ok(var, payloadp))
-        {
             check_failed = true;
-        }
         else
-        {
             memcpy(var->data, payloadp, var->info.size);
-            payloadp += var->info.size;
-        }
+        payloadp += var->info.size;
     }
 
     // Call hook
