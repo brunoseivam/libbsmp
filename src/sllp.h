@@ -66,12 +66,4 @@ enum sllp_err
  */
 char * sllp_error_str (enum sllp_err error);
 
-/**
- * Returns a string that represents the SLLP version number supported by
- * this library version
- *
- * @return String containing the version supported.
- */
-char *sllp_proto_version (void);
-
 #endif

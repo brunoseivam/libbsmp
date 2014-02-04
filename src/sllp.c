@@ -1,7 +1,5 @@
 #include "sllp.h"
 
-static char* SLLP_PROTO_VERSION = "1.00";
-
 static char* error_str[SLLP_ERR_MAX] =
 {
     [SLLP_SUCCESS]                  = "Success",
@@ -37,9 +35,4 @@ bin_op_function bin_op[256] =
 char *sllp_error_str (enum sllp_err error)
 {
     return error_str[error];
-}
-
-char *sllp_proto_version(void)
-{
-    return SLLP_PROTO_VERSION;
 }
