@@ -108,10 +108,17 @@ SERVER_CMD_FUNCTION (var_write)
         return;
     }
 
-    // Check write permission
+        // Check write permission
     if(!var->info.writable)
     {
         MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_READ_ONLY);
+        return;
+    }
+
+    // Check payload value
+    if(var->value_ok && !var->value_ok(var))
+    {
+        MESSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_VALUE);
         return;
     }
 
