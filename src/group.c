@@ -164,12 +164,22 @@ SERVER_CMD_FUNCTION (group_write)
     struct sllp_var *var;
     uint8_t *payloadp = recv_msg->payload + 1;
     unsigned int i;
+    bool check_failed = false;
 
     for(i = 0; i < grp->vars.count; ++i)
     {
         var = server->vars.list[grp->vars.list[i]->id];
-        memcpy(var->data, payloadp, var->info.size);
-        payloadp += var->info.size;
+
+        // Check payload value
+        if(var->value_ok && !var->value_ok(var, payloadp))
+        {
+            check_failed = true;
+        }
+        else
+        {
+            memcpy(var->data, payloadp, var->info.size);
+            payloadp += var->info.size;
+        }
     }
 
     // Call hook
@@ -179,7 +189,7 @@ SERVER_CMD_FUNCTION (group_write)
         server->hook(SLLP_OP_WRITE, server->modified_list);
     }
 
-    MESSSAGE_SET_ANSWER(send_msg, CMD_OK);
+    MESSSAGE_SET_ANSWER(send_msg, check_failed ? CMD_ERR_INVALID_VALUE:CMD_OK);
 }
 
 SERVER_CMD_FUNCTION (group_bin_op)

@@ -18,7 +18,7 @@ struct sllp_var_info
 struct sllp_var
 {
     struct sllp_var_info info;  // Information about the variable identification
-    bool                 (*value_ok) (struct sllp_var *);    // Value checker
+    bool                 (*value_ok) (struct sllp_var *, uint8_t *);  // Checker
     uint8_t              *data; // Pointer to the value of the variable.
     void                 *user; // The user can make use of this pointer at
                                 // will. It is not touched by SLLP.

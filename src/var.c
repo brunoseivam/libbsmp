@@ -116,7 +116,7 @@ SERVER_CMD_FUNCTION (var_write)
     }
 
     // Check payload value
-    if(var->value_ok && !var->value_ok(var))
+    if(var->value_ok && !var->value_ok(var, recv_msg->payload + 1))
     {
         MESSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_VALUE);
         return;
@@ -171,6 +171,13 @@ SERVER_CMD_FUNCTION (var_write_read)
     if(!var_wr->info.writable)
     {
         MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_READ_ONLY);
+        return;
+    }
+
+    // Check payload value
+    if(var_wr->value_ok && !var_wr->value_ok(var_wr, recv_msg->payload + 2))
+    {
+        MESSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_VALUE);
         return;
     }
 
