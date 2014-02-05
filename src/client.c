@@ -704,6 +704,42 @@ enum sllp_err sllp_request_curve_block (sllp_client_t *client,
     return SLLP_SUCCESS;
 }
 
+enum sllp_err sllp_read_curve (sllp_client_t *cli, struct sllp_curve_info *cur,
+                               uint8_t *buf, uint32_t *len)
+{
+    // Check parameters
+    if(!cli || !cur || !buf || !len)
+        return SLLP_ERR_PARAM_INVALID;
+
+    if(!curves_list_contains(&cli->curves, cur))
+        return SLLP_ERR_PARAM_INVALID;
+
+    enum sllp_err err;          // Error code
+    uint16_t      blk;          // Current block offset
+    uint8_t       *bufp = buf;  // Pointer to the current region of the buffer
+    uint16_t      blklen;       // Length of the last returned block
+
+    // Iterate over blocks
+    *len = 0;
+    for(blk = 0; blk < cur->nblocks; ++blk)
+    {
+        if((err = sllp_request_curve_block(cli, cur, blk, bufp, &blklen)))
+        {
+            *len = 0;
+            return err;
+        }
+
+        *len += blklen;
+
+        if(blklen < cur->block_size)
+            break;
+
+        bufp += cur->block_size;
+    }
+
+    return SLLP_SUCCESS;
+}
+
 enum sllp_err sllp_send_curve_block (sllp_client_t *client,
                                      struct sllp_curve_info *curve,
                                      uint16_t offset, uint8_t *data,
@@ -734,6 +770,37 @@ enum sllp_err sllp_send_curve_block (sllp_client_t *client,
 
     if(command(client, &request, &response) || response.code != CMD_OK)
         return SLLP_ERR_COMM;
+
+    return SLLP_SUCCESS;
+}
+
+enum sllp_err sllp_write_curve (sllp_client_t *cli, struct sllp_curve_info *cur,
+                                uint8_t *buf, uint32_t len)
+{
+    // Check parameters
+    if(!cli || !cur || !buf)
+        return SLLP_ERR_PARAM_INVALID;
+
+    if(!curves_list_contains(&cli->curves, cur))
+        return SLLP_ERR_PARAM_INVALID;
+
+    enum sllp_err err;          // Error code
+    uint16_t      blk;          // Current block offset
+    uint8_t       *bufp = buf;  // Pointer to the current region of the buffer
+    uint16_t      blklen;       // Length of the current block
+
+    // Iterate over blocks
+    for(blk = 0; blk < cur->nblocks; ++blk)
+    {
+        blklen = len < cur->block_size ? len : cur->block_size;
+
+        if((err = sllp_send_curve_block(cli, cur, blk, bufp, blklen)))
+            return err;
+
+        len -= blklen;
+
+        bufp += blklen;
+    }
 
     return SLLP_SUCCESS;
 }

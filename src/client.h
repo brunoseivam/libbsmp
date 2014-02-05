@@ -372,6 +372,33 @@ enum sllp_err sllp_request_curve_block (sllp_client_t *client,
                                         uint16_t *len);
 
 /*
+ * Read all blocks of from a specified curve.
+ *
+ * The functions stops when all the blocks have been read or when a block read
+ * returned less than curve->block_size bytes.
+ *
+ * The data buffer MUST be able to hold up to curve->nblocks*curve->block_size
+ * bytes.
+ *
+ * @param client [input] A SLLP Client Library instance
+ * @param curve [input] The curve to be read
+ * @param data [output] Buffer to hold the read data
+ * @param len [output] Pointer to a variable to hold the number of bytes written
+ *                     to the buffer
+ *
+ * @return SLLP_SUCCESS or one of the following errors:
+ * <ul>
+ *   <li>SLLP_ERR_PARAM_INVALID: client, curve, data or len is a NULL
+ *                               pointer</li>
+ *   <li>SLLP_ERR_COMM: There was a failure either sending or receiving a
+ *                      message</li>
+ * </ul>
+ */
+enum sllp_err sllp_read_curve (sllp_client_t *client,
+                               struct sllp_curve_info *curve, uint8_t *data,
+                               uint32_t *len);
+
+/*
  * Write values to a block of a curve.
  *
  * @param client [input] A SLLP Client Library instance
@@ -393,6 +420,27 @@ enum sllp_err sllp_send_curve_block (sllp_client_t *client,
                                      struct sllp_curve_info *curve,
                                      uint16_t offset, uint8_t *data,
                                      uint16_t len);
+
+/*
+ * Write sequentially to the blocks of a Curve.
+ *
+ * This function writes, at most, curve->nblocks*curve->block_size to the curve.
+ *
+ * @param client [input] A SLLP Client Library instance
+ * @param curve [input] The curve to be written to
+ * @param data [input] Buffer with data to be written
+ * @param len [input] Number of bytes to be written to the curve
+ *
+ * @return SLLP_SUCCESS or one of the following errors:
+ * <ul>
+ *   <li>SLLP_ERR_PARAM_INVALID: client, curve or data is a NULL pointer</li>
+ *   <li>SLLP_ERR_COMM: There was a failure either sending or receiving a
+ *                      message</li>
+ * </ul>
+ */
+enum sllp_err sllp_write_curve (sllp_client_t *client,
+                                struct sllp_curve_info *curve, uint8_t *data,
+                                uint32_t len);
 
 /*
  * Request a recalculation of the checksum of a server curve.
