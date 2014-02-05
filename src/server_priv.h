@@ -15,7 +15,12 @@
         (msg)->payload_size = 0;\
     }while(0)
 
-#define MESSAGE_SET_ANSWER_RET(msg, code) MESSAGE_SET_ANSWER(msg,code); return
+#define MESSAGE_SET_ANSWER_RET(msg, code)\
+    do {\
+        (msg)->command_code = (code);\
+        (msg)->payload_size = 0;\
+        return;\
+    }while(0)
 
 struct message
 {

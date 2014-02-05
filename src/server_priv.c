@@ -627,7 +627,7 @@ SERVER_CMD_FUNCTION (curve_block)
     struct sllp_curve *curve = server->curves.list[curve_id];
 
     // Check block size
-    if(recv_msg->payload_size > curve->info.block_size)
+    if(recv_msg->payload_size > curve->info.block_size + SLLP_CURVE_BLOCK_INFO)
         MESSAGE_SET_ANSWER_RET(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
 
     // Check offset
