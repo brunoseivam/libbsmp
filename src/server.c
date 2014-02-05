@@ -1,18 +1,6 @@
-#include "sllp_server.h"
-#include "server_defs.h"
-
-#define VERSION     1
-#define SUBVERSION  10
-#define REVISION    0   // unused
-
-
-// Entities
-#include "var.h"
-#include "group.h"
-#include "curve.h"
-#include "func.h"
-
-#include "defs.h"
+#include "server.h"
+#include "server_priv.h"
+#include "sllp_priv.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -118,7 +106,7 @@ enum sllp_err sllp_server_destroy (sllp_server_t* server)
 enum sllp_err sllp_register_variable (sllp_server_t *server,
                                       struct sllp_var *var)
 {
-    SERVER_REGISTER(var, MAX_VARIABLES);
+    SERVER_REGISTER(var, SLLP_MAX_VARIABLES);
 
     // Add to the group containing all variables
     group_add_var(&server->groups.list[GROUP_ALL_ID], var);
@@ -135,14 +123,14 @@ enum sllp_err sllp_register_variable (sllp_server_t *server,
 enum sllp_err sllp_register_curve (sllp_server_t *server,
                                    struct sllp_curve *curve)
 {
-    SERVER_REGISTER(curve, MAX_CURVES);
+    SERVER_REGISTER(curve, SLLP_MAX_CURVES);
     return SLLP_SUCCESS;
 }
 
 enum sllp_err sllp_register_function (sllp_server_t *server,
                                       struct sllp_func *func)
 {
-    SERVER_REGISTER(func, MAX_FUNCTIONS);
+    SERVER_REGISTER(func, SLLP_MAX_FUNCTIONS);
     return SLLP_SUCCESS;
 }
 
@@ -156,38 +144,43 @@ enum sllp_err sllp_register_hook(sllp_server_t* server, sllp_hook_t hook)
     return SLLP_SUCCESS;
 }
 
-SERVER_CMD_FUNCTION (query_version)
-{
-    // Check payload size
-    if(recv_msg->payload_size != 0)
-    {
-        MESSSAGE_SET_ANSWER(send_msg, CMD_ERR_INVALID_PAYLOAD_SIZE);
-        return;
-    }
-
-    // Set answer's command_code and payload_size
-    MESSSAGE_SET_ANSWER(send_msg, CMD_VERSION);
-
-    send_msg->payload_size = 3;
-    send_msg->payload[0] = VERSION;
-    send_msg->payload[1] = SUBVERSION;
-    send_msg->payload[2] = REVISION;
-}
-
 struct raw_message
 {
     uint8_t command_code;
-    uint8_t encoded_size;
+    uint8_t size[2];
     uint8_t payload[];
 }__attribute__((packed));
 
 static command_function_t command[256] =
 {
-    [CMD_QUERY_VERSION] = query_version,
-    VAR_CMD_POINTERS,
-    GROUP_CMD_POINTERS,
-    CURVE_CMD_POINTERS,
-    FUNC_CMD_POINTERS,
+    [CMD_QUERY_VERSION]         = query_version,
+
+    // Variable's functions
+    [CMD_VAR_QUERY_LIST]        = var_query_list,
+    [CMD_VAR_READ]              = var_read,
+    [CMD_VAR_WRITE]             = var_write,
+    [CMD_VAR_BIN_OP]            = var_bin_op,
+    [CMD_VAR_WRITE_READ]        = var_write_read,
+
+    // Group's functions
+    [CMD_GROUP_QUERY_LIST]      = group_query_list,
+    [CMD_GROUP_QUERY]           = group_query,
+    [CMD_GROUP_READ]            = group_read,
+    [CMD_GROUP_WRITE]           = group_write,
+    [CMD_GROUP_BIN_OP]          = group_bin_op,
+    [CMD_GROUP_CREATE]          = group_create,
+    [CMD_GROUP_REMOVE_ALL]      = group_remove_all,
+
+    // Curve's functions
+    [CMD_CURVE_QUERY_LIST]      = curve_query_list,
+    [CMD_CURVE_QUERY_CSUM]      = curve_query_csum,
+    [CMD_CURVE_BLOCK_REQUEST]   = curve_block_request,
+    [CMD_CURVE_BLOCK]           = curve_block,
+    [CMD_CURVE_RECALC_CSUM]     = curve_recalc_csum,
+
+    // Function's functions
+    [CMD_FUNC_QUERY_LIST]       = func_query_list,
+    [CMD_FUNC_EXECUTE]          = func_execute
 };
 
 enum sllp_err sllp_process_packet (sllp_server_t *server,
@@ -206,12 +199,7 @@ enum sllp_err sllp_process_packet (sllp_server_t *server,
 
     recv_msg.command_code = (enum command_code) recv_raw_msg->command_code;
     recv_msg.payload      = recv_raw_msg->payload;
-
-    // Decode received payload size
-    if(recv_raw_msg->encoded_size == MAX_PAYLOAD_ENCODED)
-        recv_msg.payload_size = MAX_PAYLOAD;
-    else
-        recv_msg.payload_size = recv_raw_msg->encoded_size;
+    recv_msg.payload_size = (recv_raw_msg->size[0] << 8)+recv_raw_msg->size[1];
 
     send_msg.payload = send_raw_msg->payload;
 
@@ -230,11 +218,10 @@ enum sllp_err sllp_process_packet (sllp_server_t *server,
 
     send_raw_msg->command_code = send_msg.command_code;
 
-    if(send_msg.payload_size == MAX_PAYLOAD)
-        send_raw_msg->encoded_size = MAX_PAYLOAD_ENCODED;
-    else
-        send_raw_msg->encoded_size = send_msg.payload_size;
-    response->len = send_msg.payload_size + 2;
+    send_raw_msg->size[0] = send_msg.payload_size >> 8;
+    send_raw_msg->size[1] = send_msg.payload_size;
+
+    response->len = send_msg.payload_size + SLLP_HEADER_SIZE;
 
     return SLLP_SUCCESS;
 }

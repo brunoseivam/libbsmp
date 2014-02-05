@@ -1,10 +1,5 @@
-#include "sllp_client.h"
-#include "defs.h"
-
-#include "var.h"
-#include "group.h"
-#include "curve.h"
-#include "func.h"
+#include "sllp_priv.h"
+#include "client.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,8 +31,8 @@ static char bin_op_code[BIN_OP_COUNT] =
 struct sllp_message
 {
     uint8_t     code;
-    uint32_t    payload_size;
-    uint8_t     payload[MAX_PAYLOAD];
+    uint16_t    payload_size;
+    uint8_t     payload[SLLP_MAX_PAYLOAD];
 };
 
 #define LIST_CONTAINS(name, list_type, item_type)\
@@ -62,25 +57,21 @@ static enum sllp_err command(sllp_client_t *client, struct sllp_message *request
 
     struct
     {
-        uint8_t data[MAX_MESSAGE];
+        uint8_t data[SLLP_MAX_MESSAGE];
         uint32_t size;
     }send_buf, recv_buf;
 
     // Prepare buffer with the message to be sent
     send_buf.data[0] = request->code;      // Code in the first byte
-
-    if(request->payload_size < MAX_PAYLOAD_ENCODED)  // Size in the second byte
-        send_buf.data[1] = request->payload_size;
-    else if(request->payload_size == MAX_PAYLOAD)
-        send_buf.data[1] = MAX_PAYLOAD_ENCODED;
-    else
-        return SLLP_ERR_PARAM_INVALID;
+    send_buf.data[1] = request->payload_size >> 8;
+    send_buf.data[2] = request->payload_size;
 
     // Payload in the subsequent bytes
-    memcpy(&send_buf.data[2], request->payload, request->payload_size);
+    memcpy(&send_buf.data[SLLP_HEADER_SIZE], request->payload,
+           request->payload_size);
 
     // Send request
-    send_buf.size = 2 + request->payload_size;
+    send_buf.size = 3 + request->payload_size;
     if(client->send(send_buf.data, &send_buf.size))
         return SLLP_ERR_COMM;
 
@@ -92,17 +83,12 @@ static enum sllp_err command(sllp_client_t *client, struct sllp_message *request
     if(recv_buf.size < 2)
         return SLLP_ERR_COMM;
 
-    // Copy command code
+    // Copy command code and get payload size
     response->code = recv_buf.data[0];
-
-    // Decode size
-    if(recv_buf.data[1] == MAX_PAYLOAD_ENCODED)
-        response->payload_size = MAX_PAYLOAD;
-    else
-        response->payload_size = recv_buf.data[1];
+    response->payload_size = (recv_buf.data[1] << 8) | recv_buf.data[2];
 
     // Copy response
-    memcpy(response->payload, &recv_buf.data[2], recv_buf.size);
+    memcpy(response->payload, &recv_buf.data[SLLP_HEADER_SIZE], recv_buf.size);
 
     return SLLP_SUCCESS;
 }
@@ -169,6 +155,9 @@ static enum sllp_err update_vars_list(sllp_client_t *client)
         client->vars.list[i].id       = i;
         client->vars.list[i].writable = response.payload[i] & WRITABLE_MASK;
         client->vars.list[i].size     = response.payload[i] & SIZE_MASK;
+
+        if(!client->vars.list[i].size)
+            client->vars.list[i].size = SLLP_VAR_MAX_SIZE;
     }
 
     return SLLP_SUCCESS;
@@ -261,17 +250,23 @@ static enum sllp_err update_curves_list(sllp_client_t *client)
     memset(&client->curves, 0, sizeof(client->curves));
 
     // Each 3-byte block in the response correspond to a curve
-    client->curves.count = response.payload_size/CURVE_INFO_SIZE;
+    client->curves.count = response.payload_size/SLLP_CURVE_LIST_INFO;
 
     unsigned int i;
+    uint8_t *payloadp = response.payload;
     for(i = 0; i < client->curves.count; ++i)
     {
         struct sllp_curve_info *curve = &client->curves.list[i];
 
-        curve->id        = i;
-        curve->writable  = response.payload[i*CURVE_INFO_SIZE];
-        curve->nblocks   = (response.payload[i*CURVE_INFO_SIZE + 1] << 8) +
-                           response.payload[i*CURVE_INFO_SIZE + 2] + 1;
+        curve->id            = i;
+        curve->writable      = *(payloadp++);
+        curve->block_size    = *(payloadp++) << 8;
+        curve->block_size   += *(payloadp++);
+        curve->nblocks       = *(payloadp++) << 8;
+        curve->nblocks      += *(payloadp++);
+
+        if(!curve->nblocks)
+            curve->nblocks = SLLP_CURVE_MAX_BLOCKS;
 
         struct sllp_message response_csum, request_csum =
         {
@@ -284,7 +279,7 @@ static enum sllp_err update_curves_list(sllp_client_t *client)
            response_csum.code != CMD_CURVE_CSUM)
             continue;
 
-        memcpy(curve->checksum, response_csum.payload, CURVE_CSUM_SIZE);
+        memcpy(curve->checksum, response_csum.payload, SLLP_CURVE_CSUM_SIZE);
     }
 
     return SLLP_SUCCESS;
@@ -682,9 +677,10 @@ enum sllp_err sllp_remove_all_groups (sllp_client_t *client)
 
 enum sllp_err sllp_request_curve_block (sllp_client_t *client,
                                         struct sllp_curve_info *curve,
-                                        uint16_t offset, uint8_t *data)
+                                        uint16_t offset, uint8_t *data,
+                                        uint16_t *len)
 {
-    if(!client || !curve || !data)
+    if(!client || !curve || !data || !len)
         return SLLP_ERR_PARAM_INVALID;
 
     if(!curves_list_contains(&client->curves, curve))
@@ -695,21 +691,23 @@ enum sllp_err sllp_request_curve_block (sllp_client_t *client,
 
     struct sllp_message response, request = {
         .code = CMD_CURVE_BLOCK_REQUEST,
-        .payload = {curve->id, offset >> 8, offset & 0xFF},
-        .payload_size = CURVE_INFO_SIZE
+        .payload = {curve->id, offset >> 8, offset},
+        .payload_size = SLLP_CURVE_BLOCK_INFO
     };
 
     if(command(client, &request, &response) || response.code !=CMD_CURVE_BLOCK)
         return SLLP_ERR_COMM;
 
-    memcpy(data, response.payload + CURVE_INFO_SIZE, CURVE_BLOCK_SIZE);
+    *len = response.payload_size - SLLP_CURVE_BLOCK_INFO;
+    memcpy(data, response.payload + SLLP_CURVE_BLOCK_INFO, *len);
 
     return SLLP_SUCCESS;
 }
 
 enum sllp_err sllp_send_curve_block (sllp_client_t *client,
                                      struct sllp_curve_info *curve,
-                                     uint16_t offset, uint8_t *data)
+                                     uint16_t offset, uint8_t *data,
+                                     uint16_t len)
 {
     if(!client || !curve || !data)
         return SLLP_ERR_PARAM_INVALID;
@@ -723,13 +721,16 @@ enum sllp_err sllp_send_curve_block (sllp_client_t *client,
     if(offset > curve->nblocks)
         return SLLP_ERR_PARAM_OUT_OF_RANGE;
 
+    if(len > curve->block_size)
+        return SLLP_ERR_PARAM_OUT_OF_RANGE;
+
     struct sllp_message response, request = {
         .code = CMD_CURVE_BLOCK,
-        .payload = {curve->id, offset >> 8, offset & 0xFF},
-        .payload_size = CURVE_PKT_SIZE
+        .payload = {curve->id, offset >> 8, offset},
+        .payload_size = len + SLLP_CURVE_BLOCK_INFO,
     };
 
-    memcpy(request.payload + CURVE_INFO_SIZE, data, CURVE_BLOCK_SIZE);
+    memcpy(request.payload + SLLP_CURVE_BLOCK_INFO, data, len);
 
     if(command(client, &request, &response) || response.code != CMD_OK)
         return SLLP_ERR_COMM;

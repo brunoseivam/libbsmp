@@ -2,10 +2,6 @@
 #define SLLP_SERVER_H
 
 #include "sllp.h"
-#include "sllp_var.h"
-#include "sllp_group.h"
-#include "sllp_curve.h"
-#include "sllp_func.h"
 
 // Types
 

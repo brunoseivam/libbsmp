@@ -2,17 +2,13 @@
 #define SLLP_CLIENT_H
 
 #include "sllp.h"
-#include "sllp_var.h"
-#include "sllp_group.h"
-#include "sllp_curve.h"
-#include "sllp_func.h"
 
 // Types
 
 // Handle to a client instance
 typedef struct sllp_client sllp_client_t;
 
-// Communication function (send and receive data). Must return 0 if successful
+// Communication function (send or receive data). Must return 0 if successful
 // and anything but 0 otherwise.
 typedef int (*sllp_comm_func_t) (uint8_t* data, uint32_t *count);
 
@@ -100,7 +96,7 @@ enum sllp_err sllp_get_vars_list (sllp_client_t *client,
                                   struct sllp_var_info_list **list);
 
 /*
- * Returns the list of groups provided by a server in the list parameter.
+ * Returns the list of groups provided by the server in the list parameter.
  *
  * The sllp instance MUST be previously initialized. Otherwise an empty list
  * will be returned.
@@ -140,7 +136,7 @@ enum sllp_err sllp_get_curves_list (sllp_client_t *client,
                                     struct sllp_curve_info_list **list);
 
 /*
- * Returns the list of Fcuntions, provided by a server, in the list parameter.
+ * Returns the list of Functions, provided by a server, in the list parameter.
  *
  * The sllp instance MUST be previously initialized. Otherwise an empty list
  * will be returned.
@@ -162,7 +158,7 @@ enum sllp_err sllp_get_funcs_list (sllp_client_t *client,
 /*
  * Reads the value of a variable into a caller provided buffer.
  *
- * The values buffer MUST be able to hold, at least, var->size bytes.
+ * The values buffer MUST be able to hold var->size bytes.
  *
  * @param client [input] A SLLP Client Library instance
  * @param var [input] The variable to be read
@@ -182,7 +178,7 @@ enum sllp_err sllp_read_var (sllp_client_t *client, struct sllp_var_info *var,
 /*
  * Writes values to a variable from a caller provided buffer.
  *
- * The values buffer MUST contain, at least, var->size bytes.
+ * The values buffer MUST contain var->size bytes.
  *
  * @param client [input] A SLLP Client Library instance
  * @param var [input] The variable to be written
@@ -203,7 +199,7 @@ enum sllp_err sllp_write_var (sllp_client_t *client, struct sllp_var_info *var,
  * Writes values to a variable from a caller provided buffer and reads a
  * variable to a caller provided buffer in just one protocol command.
  *
- * The values buffer MUST contain, at least, var->size bytes for each var.
+ * The values buffer MUST contain var->size bytes for each var.
  *
  * @param client [input] A SLLP Client Library instance
  * @param write_var [input] The variable to be written
@@ -230,7 +226,7 @@ enum sllp_err sllp_write_read_vars (sllp_client_t *client,
 /*
  * Reads the values of a group of variables into a caller provided buffer.
  *
- * The values buffer MUST be able to hold, at least, group->size bytes.
+ * The values buffer MUST be able to hold group->size bytes.
  *
  * @param client [input] A SLLP Client Library instance
  * @param var [input] The variable to be read
@@ -250,7 +246,7 @@ enum sllp_err sllp_read_group (sllp_client_t *client, struct sllp_group *grp,
 /*
  * Writes values to variables in a group from a caller provided buffer.
  *
- * The values buffer MUST contain, at least, grp->size bytes.
+ * The values buffer MUST contain grp->size bytes.
  *
  * @param client [input] A SLLP Client Library instance
  * @param grp [input] The group to be written
@@ -270,7 +266,7 @@ enum sllp_err sllp_write_group (sllp_client_t *client, struct sllp_group *grp,
 /*
  * Perform a binary operation in a variable with the bits specified by the mask.
  *
- * The mask MUST contain, at least, var->size bytes.
+ * The mask MUST contain var->size bytes.
  *
  * @param client [input] A SLLP Client Library instance
  * @param var [input] The variable to perform the operation
@@ -292,7 +288,7 @@ enum sllp_err sllp_bin_op_var (sllp_client_t *client, enum sllp_bin_op op,
  * Perform a binary operation in a group of variables with the bits
  * specified by the mask.
  *
- * The mask MUST contain, at least, grp->size bytes.
+ * The mask MUST contain grp->size bytes.
  *
  * @param client [input] A SLLP Client Library instance
  * @param var [input] The group to perform the operation
@@ -317,13 +313,9 @@ enum sllp_err sllp_bin_op_group (sllp_client_t *client, enum sllp_bin_op op,
  * This function updates the list of groups of a SLLP Client instance if
  * successful.
  *
- * The parameter created_group will be ignored if it is NULL.
- *
  * @param client [input] A SLLP Client Library instance
  * @param vars_list [input] NULL-terminated list of variables to be in the new
  *                          group
- * @param created_group [output] Variable to receive a pointer to the created
- *                               group
  *
  * @return SLLP_SUCCESS or one of the following errors:
  * <ul>
@@ -356,16 +348,19 @@ enum sllp_err sllp_remove_all_groups (sllp_client_t *client);
 /*
  * Read a block of values from a specified curve.
  *
- * The data buffer MUST be able to hold SLLP_CURVE_BLOCK_SIZE bytes.
+ * The data buffer MUST be able to hold up to curve->block_size bytes.
  *
  * @param client [input] A SLLP Client Library instance
  * @param curve [input] The curve to be read
  * @param offset [input] The block to be fetched
  * @param data [output] Buffer to hold the read data
+ * @param len [output] Pointer to a variable to hold the number of bytes written
+ *                     to the buffer
  *
  * @return SLLP_SUCCESS or one of the following errors:
  * <ul>
- *   <li>SLLP_ERR_PARAM_INVALID: client, curve or data is a NULL pointer</li>
+ *   <li>SLLP_ERR_PARAM_INVALID: client, curve, data or len is a NULL
+ *                               pointer</li>
  *   <li>SLLP_ERR_OUT_OF_RANGE: offset is not less than curve->nblocks</li>
  *   <li>SLLP_ERR_COMM: There was a failure either sending or receiving a
  *                      message</li>
@@ -373,29 +368,31 @@ enum sllp_err sllp_remove_all_groups (sllp_client_t *client);
  */
 enum sllp_err sllp_request_curve_block (sllp_client_t *client,
                                         struct sllp_curve_info *curve,
-                                        uint16_t offset, uint8_t *data);
+                                        uint16_t offset, uint8_t *data,
+                                        uint16_t *len);
 
 /*
- * Writes values to a block of a curve.
- *
- *  The data buffer MUST be able to hold SLLP_CURVE_BLOCK_SIZE bytes.
+ * Write values to a block of a curve.
  *
  * @param client [input] A SLLP Client Library instance
  * @param curve [input] The curve to be written
  * @param offset [input] The block to be written
  * @param data [input] Buffer containing the data to be written
+ * @param len [input] number of bytes from the buffer to be sent
  *
  * @return SLLP_SUCCESS or one of the following errors:
  * <ul>
  *   <li>SLLP_ERR_PARAM_INVALID: client, curve or data is a NULL pointer</li>
  *   <li>SLLP_ERR_OUT_OF_RANGE: offset is not less than curve->nblocks</li>
+ *   <li>SLLP_ERR_OUT_OF_RANGE: len is greater than curve->block_size</li>
  *   <li>SLLP_ERR_COMM: There was a failure either sending or receiving a
  *                      message</li>
  * </ul>
  */
 enum sllp_err sllp_send_curve_block (sllp_client_t *client,
                                      struct sllp_curve_info *curve,
-                                     uint16_t offset, uint8_t *data);
+                                     uint16_t offset, uint8_t *data,
+                                     uint16_t len);
 
 /*
  * Request a recalculation of the checksum of a server curve.
