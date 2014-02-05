@@ -71,7 +71,7 @@ static enum sllp_err command(sllp_client_t *client, struct sllp_message *request
            request->payload_size);
 
     // Send request
-    send_buf.size = 3 + request->payload_size;
+    send_buf.size = SLLP_HEADER_SIZE + request->payload_size;
     if(client->send(send_buf.data, &send_buf.size))
         return SLLP_ERR_COMM;
 
