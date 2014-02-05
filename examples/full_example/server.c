@@ -7,6 +7,18 @@
  * see the API in action.
  */
 
+/*
+ * This server will contain a number of Entities:
+ *   - 4 Variables: One for the server 'name', two representing two fake A/D
+ *                  converters and one representing a fake 8-bit digital output.
+ *
+ *   - 2 Curves:    One little Curve (1 KiB total) and one big curve (2 MiB).
+ *
+ *   - 3 Functions: One that fakely starts the conversion of the fake A/D's
+ *                  One that randomize a block of the big curve.
+ *                  One that prints a random quote.
+ */
+
 /* Some boilerplate */
 #include "server.h"
 #include <stdbool.h>
@@ -30,7 +42,7 @@
  * The very first thing to do is to include the server library definitions. This
  * is done with this directive. Nothing else SLLP-related is needed.
  */
-#include <sllp_server.h>
+#include <sllp/server.h>
 
 
 /*
@@ -74,7 +86,8 @@ static struct sllp_var name = {
    .data = name_memory,                 // Point to the memory block
    .info.size = sizeof(name_memory),    // Store the size of the memory block
    .info.writable = false,              // Can the client write?
-   .user = (void*) "NAME"               // An internal identifier
+   .value_ok = NULL,                    // No checking function
+   .user = (void*) "SERVER_NAME"        // An internal identifier
 };
 
 static uint8_t ad_memory[2][2];
@@ -84,6 +97,7 @@ static struct sllp_var ad[2] =
         .data = ad_memory[0],
         .info.size = sizeof(ad_memory[0]),
         .info.writable = false,
+        .value_ok = NULL,
         .user = (void*) "AD1"
     },
 
@@ -91,9 +105,24 @@ static struct sllp_var ad[2] =
         .data = ad_memory[1],
         .info.size = sizeof(ad_memory[1]),
         .info.writable = false,
+        .value_ok = NULL,
         .user = (void*) "AD2"
     },
 };
+
+/*
+ * This function checks if a value being written to the digital output variable
+ * is valid. We will only allow values greater than 1 and less than 255.
+ */
+static bool check_digital_output (struct sllp_var *var, uint8_t *new_value)
+{
+    (void)var;              // We don't need it in this particular function
+    if(new_value[0] > 1 && new_value[0] < 255)
+        return true;        // Inside allowed range: OK
+    printf(S"Tried to write INVALID value (%d) to DIGITAL OUTPUT\n",
+               new_value[0]);
+    return false;           // Outside allowed range: nuh-uh
+}
 
 static uint8_t digital_output_memory[1];
 static struct sllp_var digital_output =
@@ -101,16 +130,17 @@ static struct sllp_var digital_output =
     .data = digital_output_memory,
     .info.size = sizeof(digital_output_memory),
     .info.writable = true,
+    .value_ok = check_digital_output,
     .user = (void*) "DIGITAL"
 };
 
 /*
  * Ok, now that we have a bunch of Variables, let's declare some Curves. A Curve
  * is like a very very big Variable. It is a collection of blocks. Each Curve
- * can have at most 65536 blocks of data. Each block has 16384 bytes. Therefore,
- * a single Curve can hold up to 1GB of data. If you need more than that, you
- * can use up to 128 Curves (128 GB of data), which should be enough for
- * everyone.
+ * can have at most 65536 blocks of data. Each block at most 65520 bytes.
+ * Therefore, a single Curve can hold up to 4095 MiB of data. (1 MiB short of 4
+ * GiB). If you need more than that, you can use up to 128 Curves (almost 512
+ * GiB of data), which 'should be enough for everyone'.
  *
  * (If you really need to represent more than 128 Curves, you can create more
  * server instances. However, keep in mind that this protocol was not designed
@@ -121,22 +151,25 @@ static struct sllp_var digital_output =
  * structure. If C was a nicer language, we could use lambdas and keep the code
  * clean and beautiful. It isn't, however, so we make do with what we have.
  *
- * We will create two Curves: one little, with 2 blocks (2*16384 bytes) and one
- * big, with 256 blocks (256*16384 bytes).
+ * We will create two Curves: a little Curve, with 2 512-byte blocks (2*512
+ * bytes) and a bigger one, with 64 32 KiB blocks (64*32768 bytes).
  */
 
 /*
  * First, let's declare the memory blocks to be used by these Curves.
  */
-static uint8_t little_curve_memory[2*SLLP_CURVE_BLOCK_SIZE];
-static uint8_t big_curve_memory[256*SLLP_CURVE_BLOCK_SIZE];
+static uint8_t little_curve_memory[2*512];
+static uint8_t big_curve_memory[64*32768];
 
 /*
  * Every Curve must have two auxiliary functions: read_block and write_block.
- * Here we define those two functions to operate on both our curves
+ * Here we define those two functions to operate on both our curves. Keep in
+ * mind that reading a Curve can return less bytes than specified in the block
+ * size. Likewise, it is possible to write less than curve->info.block_size
+ * bytes to a block.
  */
 static void curve_read_block (struct sllp_curve *curve, uint16_t block,
-                              uint8_t *data)
+                              uint8_t *data, uint16_t *len)
 {
     /* Let's check which curve we have so we can point to the right block. */
 
@@ -151,10 +184,12 @@ static void curve_read_block (struct sllp_curve *curve, uint16_t block,
      */
 
     uint8_t *block_data;
+    uint16_t block_size = curve->info.block_size;
+
     if(!strcmp((char*)curve->user, "MY PRETTY LITTLE CURVE"))
-        block_data = &little_curve_memory[block*SLLP_CURVE_BLOCK_SIZE];
+        block_data = &little_curve_memory[block*block_size];
     else if(!strcmp((char*)curve->user, "MY AWESOME BIG CURVE"))
-        block_data = &big_curve_memory[block*SLLP_CURVE_BLOCK_SIZE];
+        block_data = &big_curve_memory[block*block_size];
     else
     {
         fprintf(stderr,S"That's weird. I've got an unexpected Curve to read\n");
@@ -162,40 +197,49 @@ static void curve_read_block (struct sllp_curve *curve, uint16_t block,
     }
 
     /* Now we need to copy the block requested into the 'data' pointer. */
-    memcpy(data, block_data, SLLP_CURVE_BLOCK_SIZE);
+    memcpy(data, block_data, block_size);
+
+    /* We copied the whole requested block */
+    *len = block_size;
 }
 
 static void curve_write_block (struct sllp_curve *curve, uint16_t block,
-                               uint8_t *data)
+                               uint8_t *data, uint16_t len)
 {
     /*
      * Same logic used in curve_read_block. Note that this function will only
-     * be called for the little Curve, because the big Curve is read-only.
+     * be called for the little Curve, because the big Curve is read-only. Note
+     * that len is not checked. The library checks its validity, but once again,
+     * if you are completely paranoid and want to check yourself, feel free to
+     * do so.
      */
     uint8_t *block_data;
+
     if(!strcmp((char*)curve->user, "MY PRETTY LITTLE CURVE"))
-        block_data = &little_curve_memory[block*SLLP_CURVE_BLOCK_SIZE];
+        block_data = &little_curve_memory[block*len];
     else
     {
         fprintf(stderr,S"This is not the Curve I'm looking for.\n");
         return;
     }
 
-    /* Now we need to copy the 'data' pointer into the requested block. */
-    memcpy(block_data, data, SLLP_CURVE_BLOCK_SIZE);
+    /* Now copy the 'data' pointer into the requested block. */
+    memcpy(block_data, data, len);
 }
 
 /* Let's declare those Curves already! */
 static struct sllp_curve little_curve = {
-    .info.nblocks = 2,      // 2 blocks
-    .info.writable = true,  // The client can write on this Curve.
+    .info.nblocks = 2,                  // 2 blocks
+    .info.block_size = 512,             // 512 bytes per block
+    .info.writable = true,              // The client can write to this Curve.
     .read_block = curve_read_block,
     .write_block = curve_write_block,
     .user = (void*) "MY PRETTY LITTLE CURVE"
 };
 
 static struct sllp_curve big_curve = {
-    .info.nblocks = 256,                // 256 blocks
+    .info.nblocks = 64,                 // 64 blocks
+    .info.block_size = 32768,           // 32768 bytes per block
     .info.writable = false,             // Read-only
     .read_block = curve_read_block,
     .user = (void*) "MY AWESOME BIG CURVE"
@@ -244,8 +288,8 @@ static uint8_t rand_block(uint8_t *input, uint8_t *output)
         return 1;                       // 1 means INVALID BLOCK
 
     unsigned int i;
-    for(i = 0; i < SLLP_CURVE_BLOCK_SIZE; ++i)
-        big_curve_memory[block*SLLP_CURVE_BLOCK_SIZE + i] = rand() % 256;
+    for(i = 0; i < big_curve.info.block_size; ++i)
+        big_curve_memory[block*big_curve.info.block_size + i] = rand() % 256;
 
     return 0;                           // 0 is SUCCESS!!!
 }
@@ -364,8 +408,8 @@ int server_init (void)
 
 /*
  * A useful server isn't isolated from the world. Instead it must able to
- * receive messages, do something about them and then return a nice answer
- * saying that everything is OK.
+ * receive messages, do something about them and then return a nice and
+ * comforting answer saying that everything is OK.
  *
  * We will abstract the communication away because this is a simple example.
  * Here the communication will be consisted of receiving some bytes, arranging
