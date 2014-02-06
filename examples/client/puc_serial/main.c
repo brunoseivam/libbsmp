@@ -1,4 +1,4 @@
-#include <sllp_client.h>
+#include <sllp/client.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -6,11 +6,34 @@
 #include <fcntl.h>
 #include <string.h>
 
+#define SERIAL_HDR_SIZE         1
+#define SERIAL_CSUM_SIZE        1
+#define SERIAL_PKT_WRAP_SIZE    SERIAL_HDR_SIZE + SERIAL_CSUM_SIZE
+#define PACKET_SIZE             SLLP_MAX_MESSAGE + SERIAL_PKT_WRAP_SIZE
+#define PACKET_HEADER           SERIAL_HDR_SIZE + SLLP_HEADER_SIZE
+
+#ifdef DEBUG
+void print_packet (char* pre, uint8_t *data, uint32_t size)
+{
+    printf("%s: [", pre);
+
+    if(size < 32)
+    {
+        unsigned int i;
+        for(i = 0; i < size; ++i)
+            printf("%02X ", data[i]);
+        printf("]\n");
+    }
+    else
+        printf("%d bytes ]\n", size);
+}
+#else
+#define print_packet(pre,data,size)
+#endif
+
 #define TRY(err, func) \
 do { if((err = func)) { fprintf(stderr, #func": %s\n", sllp_error_str(err));\
                         return; }}while(0)
-
-
 
 char *port;
 int baud, address, serial;
@@ -39,36 +62,22 @@ int read_all(int fd, uint8_t *data, uint32_t count)
 
 int puc_send(uint8_t *data, uint32_t *count)
 {
-    uint8_t packet[17000];
-    uint32_t packet_size = *count + 3;
-    uint8_t *csum = &packet[packet_size - 1];
+    uint8_t  packet[PACKET_SIZE];
+    uint32_t packet_size = *count + SERIAL_PKT_WRAP_SIZE;
+    uint8_t  *csum = &packet[packet_size - 1];
 
     *csum = 0;
-
     packet[0] = address;
-    packet[1] = 0;
-
     *csum -= address;
 
     unsigned int i;
     for(i = 0; i < *count; ++i)
     {
-        packet[i + 2] = data[i];
+        packet[i + 1] = data[i];
         *csum -= data[i];
     }
 
-    /*printf("puc_send [ ");
-
-    if(*count < 32)
-    {
-        unsigned int i;
-        for(i = 0; i < packet_size; ++i)
-            printf("%02X ", packet[i]);
-        printf("]\n");
-    }
-    else
-        printf("%d bytes ]\n", packet_size);*/
-
+    print_packet("SEND", packet, packet_size);
 
     int ret = write(serial, packet, packet_size);
 
@@ -84,43 +93,30 @@ int puc_send(uint8_t *data, uint32_t *count)
 
 int puc_recv(uint8_t *data, uint32_t *count)
 {
-    uint8_t packet[17000] = {0};
+    uint8_t packet[PACKET_SIZE] = {0};
     uint32_t packet_size;
 
-    if(read_all(serial, packet, 4))
+    if(read_all(serial, packet, PACKET_HEADER))
         return EXIT_FAILURE;
 
     unsigned int remaining;
 
-    if(packet[3] == 255)
-        remaining = 16386;
-    else
-        remaining = packet[3];
+    remaining = (packet[2] << 8) + packet[3];
 
-    if(read_all(serial, packet + 4, remaining + 1))
+    if(read_all(serial, packet + PACKET_HEADER, remaining + SERIAL_CSUM_SIZE))
         return EXIT_FAILURE;
 
-    packet_size = 4 + remaining + 1;
+    packet_size = PACKET_HEADER + remaining + SERIAL_CSUM_SIZE;
 
-    /*printf("puc_recv [ ");
+    print_packet("RECV", packet, packet_size);
 
-    if(packet_size < 32)
-    {
-        unsigned int i;
-        for(i = 0; i < packet_size; ++i)
-            printf("%02X ", packet[i]);
-        printf("]\n");
-    }
-    else
-        printf("%d bytes ]\n", packet_size);*/
-
-    *count = packet_size - 3;
-    memcpy(data, packet + 2, *count);
+    *count = packet_size - SERIAL_PKT_WRAP_SIZE;
+    memcpy(data, packet + SERIAL_HDR_SIZE, *count);
 
     return EXIT_SUCCESS;
 }
 
-void print_vars(struct sllp_vars_list *vars)
+void print_vars(struct sllp_var_info_list *vars)
 {
     unsigned int i;
     for(i = 0; i < vars->count; ++i)
@@ -130,7 +126,7 @@ void print_vars(struct sllp_vars_list *vars)
     }
 }
 
-void print_groups(struct sllp_groups_list *groups)
+void print_groups(struct sllp_group_list *groups)
 {
     unsigned int i;
     for(i = 0; i < groups->count; ++i)
@@ -145,7 +141,7 @@ void print_groups(struct sllp_groups_list *groups)
     }
 }
 
-void print_curves(struct sllp_curves_list *curves)
+void print_curves(struct sllp_curve_info_list *curves)
 {
     unsigned int i;
     for(i = 0; i < curves->count; ++i)
@@ -179,29 +175,20 @@ void test_analog(sllp_client_t *client, struct sllp_var_info *ad,
     {
         written = 0;
 
-        if(da)
-        {
-            value = i << 6;
-            adjust[2] = value & 0xFF;
-            adjust[1] = (value >> 8) & 0xFF;
-            adjust[0] = (value >> 16) & 0xFF;
+        value = i << 6;
+        adjust[2] = value & 0xFF;
+        adjust[1] = (value >> 8) & 0xFF;
+        adjust[0] = (value >> 16) & 0xFF;
 
-            dvalue = (((double)value)/(1 << 18))*20.0;
-            if(dvalue > 10.0)
-                dvalue = dvalue - 20.0;
+        dvalue = (((double)value)/(1 << 18))*20.0 - 10.0;
 
-            written += printf("Write: %3.3f ", dvalue);
-            TRY(err, sllp_write_var(client, da, adjust));
-        }
+        written += printf("Write: %3.3f ", dvalue);
 
-        if(ad)
-        {
-            TRY(err, sllp_read_var(client, ad, read_back));
+        TRY(err, sllp_write_read_vars(client,da,adjust,ad,read_back));
 
-            value = (read_back[0] << 16) + (read_back[1] << 8) + read_back[2];
-            dvalue = (((double)value)/(1 << 18))*20.0 - 10.0;
-            written += printf("Read: %3.3f   ", dvalue);
-        }
+        value = (read_back[0] << 16) + (read_back[1] << 8) + read_back[2];
+        dvalue = (((double)value)/(1 << 18))*20.0 - 10.0;
+        written += printf("Read: %3.3f   ", dvalue);
 
         while(written--)
             printf("\r");
@@ -299,7 +286,7 @@ int main(int argc, char **argv)
     }
 
     // Get the variables list
-    struct sllp_vars_list *vars;
+    struct sllp_var_info_list *vars;
     if((err = sllp_get_vars_list(sllp, &vars)))
     {
         fprintf(stderr, "sllp_get_vars_list: %s\n", sllp_error_str(err));
@@ -310,7 +297,7 @@ int main(int argc, char **argv)
     print_vars(vars);
 
     // Get the groups list
-    struct sllp_groups_list *groups;
+    struct sllp_group_list *groups;
     if((err = sllp_get_groups_list(sllp, &groups)))
     {
         fprintf(stderr, "sllp_get_groups_list: %s\n", sllp_error_str(err));
@@ -321,7 +308,7 @@ int main(int argc, char **argv)
     print_groups(groups);
 
     // Get the curves list
-    struct sllp_curves_list *curves;
+    struct sllp_curve_info_list *curves;
     if((err = sllp_get_curves_list(sllp, &curves)))
     {
         fprintf(stderr, "sllp_get_curves_list: %s\n", sllp_error_str(err));
@@ -331,17 +318,30 @@ int main(int argc, char **argv)
     puts("\nCurves:\n");
     print_curves(curves);
 
-    // Search the list for the first of each type of variable
-    struct sllp_var_info *sync_config, *sync_enable;
-    struct sllp_var_info *first_ad, *first_da;
-    struct sllp_var_info *first_digin, *first_digout;
+    /*BASE_VAR_DETECTED_BOARDS,
+        BASE_VAR_PM_VAR,
+        BASE_VAR_PM_PERIOD,
+        BASE_VAR_PM_INDEX,
+        BASE_VAR_PM_RUNNING,
+        BASE_VAR_SYNC_VAR,
+        BASE_VAR_SYNC_CURVE,
+        BASE_VAR_SYNC_PROGRESS,*/
 
-    sync_config = &vars->list[0];
-    sync_enable = &vars->list[1];
-    first_ad = first_da = first_digin = first_digout = NULL;
+    // Search the list for the first of each type of variable
+    struct sllp_var_info *detected_boards   = &vars->list[0];
+    struct sllp_var_info *pm_var            = &vars->list[1];
+    struct sllp_var_info *pm_period         = &vars->list[2];
+    struct sllp_var_info *pm_index          = &vars->list[3];
+    struct sllp_var_info *pm_running        = &vars->list[4];
+    struct sllp_var_info *sync_var          = &vars->list[5];
+    struct sllp_var_info *sync_curve        = &vars->list[6];
+    struct sllp_var_info *sync_progress     = &vars->list[7];
+
+    struct sllp_var_info *first_ad      = NULL, *first_da       = NULL;
+    struct sllp_var_info *first_digin   = NULL, *first_digout   = NULL;
 
     unsigned int i;
-    for(i = 2; i < vars->count; ++i)
+    for(i = 8; i < vars->count; ++i)
     {
         struct sllp_var_info *v = &vars->list[i];
         if(!first_ad && v->size == 3 && !v->writable)
@@ -360,18 +360,19 @@ int main(int argc, char **argv)
     // Print them out
 
     puts("\nImportant variables:\n");
-    printf("SYNC_CONFIG  id=%d\n", sync_config->id);
-    printf("SYNC_ENABLE  id=%d\n", sync_enable->id);
+    uint8_t det[4];
+    sllp_read_var(sllp, detected_boards, det);
+    printf("Detected boards: %2X %2X %2X %2X\n", det[0], det[1], det[2], det[3]);
 
     if(first_ad)     printf("FIRST AD     id=%d\n", first_ad->id);
     if(first_da)     printf("FIRST DA     id=%d\n", first_da->id);
     if(first_digin)  printf("FIRST DIGIN  id=%d\n", first_digin->id);
     if(first_digout) printf("FIRST DIGOUT id=%d\n", first_digout->id);
 
-    if(first_ad || first_da)
+    if(first_ad && first_da)
         test_analog(sllp, first_ad, first_da);
 
-    if(first_digin || first_digout)
+    if(first_digin && first_digout)
         test_digital(sllp, first_digin, first_digout);
 
 exit_destroy:
