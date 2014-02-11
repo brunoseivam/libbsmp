@@ -123,8 +123,8 @@ SERVER_CMD_FUNCTION (var_query_list)
     for(i = 0; i < server->vars.count; ++i)
     {
         var = server->vars.list[i];
-        send_msg->payload[i]  = var->info.writable ? WRITABLE : READ_ONLY;
-        send_msg->payload[i] += var->info.size;
+        send_msg->payload[i]  = var->info.size & SIZE_MASK;
+        send_msg->payload[i] |= var->info.writable ? WRITABLE : READ_ONLY;
     }
     send_msg->payload_size = server->vars.count;
 }
