@@ -45,17 +45,17 @@ OBJECTDIR=build/${CND_CONF}/${IMAGE_TYPE}
 DISTDIR=dist/${CND_CONF}/${IMAGE_TYPE}
 
 # Source Files Quoted if spaced
-SOURCEFILES_QUOTED_IF_SPACED=../../../../src/md5/md5.c ../../../../src/sllp.c ../../../../src/sllp_client.c ../../../../src/sllp_server.c ../../../../src/curve.c ../../../../src/func.c ../../../../src/group.c ../../../../src/var.c
+SOURCEFILES_QUOTED_IF_SPACED=../../../../src/md5/md5.c ../../../../src/sllp.c ../../../../src/client.c ../../../../src/server.c ../../../../src/server_priv.c
 
 # Object Files Quoted if spaced
-OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/_ext/165194861/md5.o ${OBJECTDIR}/_ext/671464796/sllp.o ${OBJECTDIR}/_ext/671464796/sllp_client.o ${OBJECTDIR}/_ext/671464796/sllp_server.o ${OBJECTDIR}/_ext/671464796/curve.o ${OBJECTDIR}/_ext/671464796/func.o ${OBJECTDIR}/_ext/671464796/group.o ${OBJECTDIR}/_ext/671464796/var.o
-POSSIBLE_DEPFILES=${OBJECTDIR}/_ext/165194861/md5.o.d ${OBJECTDIR}/_ext/671464796/sllp.o.d ${OBJECTDIR}/_ext/671464796/sllp_client.o.d ${OBJECTDIR}/_ext/671464796/sllp_server.o.d ${OBJECTDIR}/_ext/671464796/curve.o.d ${OBJECTDIR}/_ext/671464796/func.o.d ${OBJECTDIR}/_ext/671464796/group.o.d ${OBJECTDIR}/_ext/671464796/var.o.d
+OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/_ext/165194861/md5.o ${OBJECTDIR}/_ext/671464796/sllp.o ${OBJECTDIR}/_ext/671464796/client.o ${OBJECTDIR}/_ext/671464796/server.o ${OBJECTDIR}/_ext/671464796/server_priv.o
+POSSIBLE_DEPFILES=${OBJECTDIR}/_ext/165194861/md5.o.d ${OBJECTDIR}/_ext/671464796/sllp.o.d ${OBJECTDIR}/_ext/671464796/client.o.d ${OBJECTDIR}/_ext/671464796/server.o.d ${OBJECTDIR}/_ext/671464796/server_priv.o.d
 
 # Object Files
-OBJECTFILES=${OBJECTDIR}/_ext/165194861/md5.o ${OBJECTDIR}/_ext/671464796/sllp.o ${OBJECTDIR}/_ext/671464796/sllp_client.o ${OBJECTDIR}/_ext/671464796/sllp_server.o ${OBJECTDIR}/_ext/671464796/curve.o ${OBJECTDIR}/_ext/671464796/func.o ${OBJECTDIR}/_ext/671464796/group.o ${OBJECTDIR}/_ext/671464796/var.o
+OBJECTFILES=${OBJECTDIR}/_ext/165194861/md5.o ${OBJECTDIR}/_ext/671464796/sllp.o ${OBJECTDIR}/_ext/671464796/client.o ${OBJECTDIR}/_ext/671464796/server.o ${OBJECTDIR}/_ext/671464796/server_priv.o
 
 # Source Files
-SOURCEFILES=../../../../src/md5/md5.c ../../../../src/sllp.c ../../../../src/sllp_client.c ../../../../src/sllp_server.c ../../../../src/curve.c ../../../../src/func.c ../../../../src/group.c ../../../../src/var.c
+SOURCEFILES=../../../../src/md5/md5.c ../../../../src/sllp.c ../../../../src/client.c ../../../../src/server.c ../../../../src/server_priv.c
 
 
 CFLAGS=
@@ -95,98 +95,62 @@ ${OBJECTDIR}/_ext/165194861/md5.o: ../../../../src/md5/md5.c  nbproject/Makefile
 	@${MKDIR} ${OBJECTDIR}/_ext/165194861 
 	@${RM} ${OBJECTDIR}/_ext/165194861/md5.o.d 
 	@${RM} ${OBJECTDIR}/_ext/165194861/md5.o 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/165194861/md5.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -Wall -MMD -MF "${OBJECTDIR}/_ext/165194861/md5.o.d" -o ${OBJECTDIR}/_ext/165194861/md5.o ../../../../src/md5/md5.c   
+	@${FIXDEPS} "${OBJECTDIR}/_ext/165194861/md5.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -O3 -Wall -MMD -MF "${OBJECTDIR}/_ext/165194861/md5.o.d" -o ${OBJECTDIR}/_ext/165194861/md5.o ../../../../src/md5/md5.c   
 	
 ${OBJECTDIR}/_ext/671464796/sllp.o: ../../../../src/sllp.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} ${OBJECTDIR}/_ext/671464796 
 	@${RM} ${OBJECTDIR}/_ext/671464796/sllp.o.d 
 	@${RM} ${OBJECTDIR}/_ext/671464796/sllp.o 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/671464796/sllp.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -Wall -MMD -MF "${OBJECTDIR}/_ext/671464796/sllp.o.d" -o ${OBJECTDIR}/_ext/671464796/sllp.o ../../../../src/sllp.c   
+	@${FIXDEPS} "${OBJECTDIR}/_ext/671464796/sllp.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -O3 -Wall -MMD -MF "${OBJECTDIR}/_ext/671464796/sllp.o.d" -o ${OBJECTDIR}/_ext/671464796/sllp.o ../../../../src/sllp.c   
 	
-${OBJECTDIR}/_ext/671464796/sllp_client.o: ../../../../src/sllp_client.c  nbproject/Makefile-${CND_CONF}.mk
+${OBJECTDIR}/_ext/671464796/client.o: ../../../../src/client.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} ${OBJECTDIR}/_ext/671464796 
-	@${RM} ${OBJECTDIR}/_ext/671464796/sllp_client.o.d 
-	@${RM} ${OBJECTDIR}/_ext/671464796/sllp_client.o 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/671464796/sllp_client.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -Wall -MMD -MF "${OBJECTDIR}/_ext/671464796/sllp_client.o.d" -o ${OBJECTDIR}/_ext/671464796/sllp_client.o ../../../../src/sllp_client.c   
+	@${RM} ${OBJECTDIR}/_ext/671464796/client.o.d 
+	@${RM} ${OBJECTDIR}/_ext/671464796/client.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/671464796/client.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -O3 -Wall -MMD -MF "${OBJECTDIR}/_ext/671464796/client.o.d" -o ${OBJECTDIR}/_ext/671464796/client.o ../../../../src/client.c   
 	
-${OBJECTDIR}/_ext/671464796/sllp_server.o: ../../../../src/sllp_server.c  nbproject/Makefile-${CND_CONF}.mk
+${OBJECTDIR}/_ext/671464796/server.o: ../../../../src/server.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} ${OBJECTDIR}/_ext/671464796 
-	@${RM} ${OBJECTDIR}/_ext/671464796/sllp_server.o.d 
-	@${RM} ${OBJECTDIR}/_ext/671464796/sllp_server.o 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/671464796/sllp_server.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -Wall -MMD -MF "${OBJECTDIR}/_ext/671464796/sllp_server.o.d" -o ${OBJECTDIR}/_ext/671464796/sllp_server.o ../../../../src/sllp_server.c   
+	@${RM} ${OBJECTDIR}/_ext/671464796/server.o.d 
+	@${RM} ${OBJECTDIR}/_ext/671464796/server.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/671464796/server.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -O3 -Wall -MMD -MF "${OBJECTDIR}/_ext/671464796/server.o.d" -o ${OBJECTDIR}/_ext/671464796/server.o ../../../../src/server.c   
 	
-${OBJECTDIR}/_ext/671464796/curve.o: ../../../../src/curve.c  nbproject/Makefile-${CND_CONF}.mk
+${OBJECTDIR}/_ext/671464796/server_priv.o: ../../../../src/server_priv.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} ${OBJECTDIR}/_ext/671464796 
-	@${RM} ${OBJECTDIR}/_ext/671464796/curve.o.d 
-	@${RM} ${OBJECTDIR}/_ext/671464796/curve.o 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/671464796/curve.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -Wall -MMD -MF "${OBJECTDIR}/_ext/671464796/curve.o.d" -o ${OBJECTDIR}/_ext/671464796/curve.o ../../../../src/curve.c   
-	
-${OBJECTDIR}/_ext/671464796/func.o: ../../../../src/func.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} ${OBJECTDIR}/_ext/671464796 
-	@${RM} ${OBJECTDIR}/_ext/671464796/func.o.d 
-	@${RM} ${OBJECTDIR}/_ext/671464796/func.o 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/671464796/func.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -Wall -MMD -MF "${OBJECTDIR}/_ext/671464796/func.o.d" -o ${OBJECTDIR}/_ext/671464796/func.o ../../../../src/func.c   
-	
-${OBJECTDIR}/_ext/671464796/group.o: ../../../../src/group.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} ${OBJECTDIR}/_ext/671464796 
-	@${RM} ${OBJECTDIR}/_ext/671464796/group.o.d 
-	@${RM} ${OBJECTDIR}/_ext/671464796/group.o 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/671464796/group.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -Wall -MMD -MF "${OBJECTDIR}/_ext/671464796/group.o.d" -o ${OBJECTDIR}/_ext/671464796/group.o ../../../../src/group.c   
-	
-${OBJECTDIR}/_ext/671464796/var.o: ../../../../src/var.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} ${OBJECTDIR}/_ext/671464796 
-	@${RM} ${OBJECTDIR}/_ext/671464796/var.o.d 
-	@${RM} ${OBJECTDIR}/_ext/671464796/var.o 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/671464796/var.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -Wall -MMD -MF "${OBJECTDIR}/_ext/671464796/var.o.d" -o ${OBJECTDIR}/_ext/671464796/var.o ../../../../src/var.c   
+	@${RM} ${OBJECTDIR}/_ext/671464796/server_priv.o.d 
+	@${RM} ${OBJECTDIR}/_ext/671464796/server_priv.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/671464796/server_priv.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE) -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1 -fframe-base-loclist  -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -O3 -Wall -MMD -MF "${OBJECTDIR}/_ext/671464796/server_priv.o.d" -o ${OBJECTDIR}/_ext/671464796/server_priv.o ../../../../src/server_priv.c   
 	
 else
 ${OBJECTDIR}/_ext/165194861/md5.o: ../../../../src/md5/md5.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} ${OBJECTDIR}/_ext/165194861 
 	@${RM} ${OBJECTDIR}/_ext/165194861/md5.o.d 
 	@${RM} ${OBJECTDIR}/_ext/165194861/md5.o 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/165194861/md5.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -Wall -MMD -MF "${OBJECTDIR}/_ext/165194861/md5.o.d" -o ${OBJECTDIR}/_ext/165194861/md5.o ../../../../src/md5/md5.c   
+	@${FIXDEPS} "${OBJECTDIR}/_ext/165194861/md5.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -O3 -Wall -MMD -MF "${OBJECTDIR}/_ext/165194861/md5.o.d" -o ${OBJECTDIR}/_ext/165194861/md5.o ../../../../src/md5/md5.c   
 	
 ${OBJECTDIR}/_ext/671464796/sllp.o: ../../../../src/sllp.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} ${OBJECTDIR}/_ext/671464796 
 	@${RM} ${OBJECTDIR}/_ext/671464796/sllp.o.d 
 	@${RM} ${OBJECTDIR}/_ext/671464796/sllp.o 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/671464796/sllp.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -Wall -MMD -MF "${OBJECTDIR}/_ext/671464796/sllp.o.d" -o ${OBJECTDIR}/_ext/671464796/sllp.o ../../../../src/sllp.c   
+	@${FIXDEPS} "${OBJECTDIR}/_ext/671464796/sllp.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -O3 -Wall -MMD -MF "${OBJECTDIR}/_ext/671464796/sllp.o.d" -o ${OBJECTDIR}/_ext/671464796/sllp.o ../../../../src/sllp.c   
 	
-${OBJECTDIR}/_ext/671464796/sllp_client.o: ../../../../src/sllp_client.c  nbproject/Makefile-${CND_CONF}.mk
+${OBJECTDIR}/_ext/671464796/client.o: ../../../../src/client.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} ${OBJECTDIR}/_ext/671464796 
-	@${RM} ${OBJECTDIR}/_ext/671464796/sllp_client.o.d 
-	@${RM} ${OBJECTDIR}/_ext/671464796/sllp_client.o 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/671464796/sllp_client.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -Wall -MMD -MF "${OBJECTDIR}/_ext/671464796/sllp_client.o.d" -o ${OBJECTDIR}/_ext/671464796/sllp_client.o ../../../../src/sllp_client.c   
+	@${RM} ${OBJECTDIR}/_ext/671464796/client.o.d 
+	@${RM} ${OBJECTDIR}/_ext/671464796/client.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/671464796/client.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -O3 -Wall -MMD -MF "${OBJECTDIR}/_ext/671464796/client.o.d" -o ${OBJECTDIR}/_ext/671464796/client.o ../../../../src/client.c   
 	
-${OBJECTDIR}/_ext/671464796/sllp_server.o: ../../../../src/sllp_server.c  nbproject/Makefile-${CND_CONF}.mk
+${OBJECTDIR}/_ext/671464796/server.o: ../../../../src/server.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} ${OBJECTDIR}/_ext/671464796 
-	@${RM} ${OBJECTDIR}/_ext/671464796/sllp_server.o.d 
-	@${RM} ${OBJECTDIR}/_ext/671464796/sllp_server.o 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/671464796/sllp_server.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -Wall -MMD -MF "${OBJECTDIR}/_ext/671464796/sllp_server.o.d" -o ${OBJECTDIR}/_ext/671464796/sllp_server.o ../../../../src/sllp_server.c   
+	@${RM} ${OBJECTDIR}/_ext/671464796/server.o.d 
+	@${RM} ${OBJECTDIR}/_ext/671464796/server.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/671464796/server.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -O3 -Wall -MMD -MF "${OBJECTDIR}/_ext/671464796/server.o.d" -o ${OBJECTDIR}/_ext/671464796/server.o ../../../../src/server.c   
 	
-${OBJECTDIR}/_ext/671464796/curve.o: ../../../../src/curve.c  nbproject/Makefile-${CND_CONF}.mk
+${OBJECTDIR}/_ext/671464796/server_priv.o: ../../../../src/server_priv.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} ${OBJECTDIR}/_ext/671464796 
-	@${RM} ${OBJECTDIR}/_ext/671464796/curve.o.d 
-	@${RM} ${OBJECTDIR}/_ext/671464796/curve.o 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/671464796/curve.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -Wall -MMD -MF "${OBJECTDIR}/_ext/671464796/curve.o.d" -o ${OBJECTDIR}/_ext/671464796/curve.o ../../../../src/curve.c   
-	
-${OBJECTDIR}/_ext/671464796/func.o: ../../../../src/func.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} ${OBJECTDIR}/_ext/671464796 
-	@${RM} ${OBJECTDIR}/_ext/671464796/func.o.d 
-	@${RM} ${OBJECTDIR}/_ext/671464796/func.o 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/671464796/func.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -Wall -MMD -MF "${OBJECTDIR}/_ext/671464796/func.o.d" -o ${OBJECTDIR}/_ext/671464796/func.o ../../../../src/func.c   
-	
-${OBJECTDIR}/_ext/671464796/group.o: ../../../../src/group.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} ${OBJECTDIR}/_ext/671464796 
-	@${RM} ${OBJECTDIR}/_ext/671464796/group.o.d 
-	@${RM} ${OBJECTDIR}/_ext/671464796/group.o 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/671464796/group.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -Wall -MMD -MF "${OBJECTDIR}/_ext/671464796/group.o.d" -o ${OBJECTDIR}/_ext/671464796/group.o ../../../../src/group.c   
-	
-${OBJECTDIR}/_ext/671464796/var.o: ../../../../src/var.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} ${OBJECTDIR}/_ext/671464796 
-	@${RM} ${OBJECTDIR}/_ext/671464796/var.o.d 
-	@${RM} ${OBJECTDIR}/_ext/671464796/var.o 
-	@${FIXDEPS} "${OBJECTDIR}/_ext/671464796/var.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -Wall -MMD -MF "${OBJECTDIR}/_ext/671464796/var.o.d" -o ${OBJECTDIR}/_ext/671464796/var.o ../../../../src/var.c   
+	@${RM} ${OBJECTDIR}/_ext/671464796/server_priv.o.d 
+	@${RM} ${OBJECTDIR}/_ext/671464796/server_priv.o 
+	@${FIXDEPS} "${OBJECTDIR}/_ext/671464796/server_priv.o.d" $(SILENT) -rsi ${MP_CC_DIR}../  -c ${MP_CC}  $(MP_EXTRA_CC_PRE)  -g -x c -c -mprocessor=$(MP_PROCESSOR_OPTION) -O3 -Wall -MMD -MF "${OBJECTDIR}/_ext/671464796/server_priv.o.d" -o ${OBJECTDIR}/_ext/671464796/server_priv.o ../../../../src/server_priv.c   
 	
 endif
 
