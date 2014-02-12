@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-Wall -g
-LDFLAGS=-lsllp
+LDFLAGS=-lbsmp
 
 all: client.c server.c
 	$(CC) $(CFLAGS) server.c client.c -o example $(LDFLAGS)

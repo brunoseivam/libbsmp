@@ -10,9 +10,9 @@ CND_CONF=default
 CND_DISTDIR=dist
 TMPDIR=build/${CND_CONF}/${IMAGE_TYPE}/tmp-packaging
 TMPDIRNAME=tmp-packaging
-OUTPUT_PATH=dist/${CND_CONF}/${IMAGE_TYPE}/libsllp.X.${OUTPUT_SUFFIX}
-OUTPUT_BASENAME=libsllp.X.${OUTPUT_SUFFIX}
-PACKAGE_TOP_DIR=libsllp.X/
+OUTPUT_PATH=dist/${CND_CONF}/${IMAGE_TYPE}/libbsmp.X.${OUTPUT_SUFFIX}
+OUTPUT_BASENAME=libbsmp.X.${OUTPUT_SUFFIX}
+PACKAGE_TOP_DIR=libbsmp.X/
 
 # Functions
 function checkReturnCode
@@ -57,15 +57,15 @@ mkdir -p ${TMPDIR}
 
 # Copy files and create directories and links
 cd "${TOP}"
-makeDirectory ${TMPDIR}/libsllp.X/lib
+makeDirectory ${TMPDIR}/libbsmp.X/lib
 copyFileToTmpDir "${OUTPUT_PATH}" "${TMPDIR}/${PACKAGE_TOP_DIR}lib/${OUTPUT_BASENAME}" 0644
 
 
 # Generate tar file
 cd "${TOP}"
-rm -f ${CND_DISTDIR}/${CND_CONF}/package/libsllp.X.tar
+rm -f ${CND_DISTDIR}/${CND_CONF}/package/libbsmp.X.tar
 cd ${TMPDIR}
-tar -vcf ../../../../${CND_DISTDIR}/${CND_CONF}/package/libsllp.X.tar *
+tar -vcf ../../../../${CND_DISTDIR}/${CND_CONF}/package/libbsmp.X.tar *
 checkReturnCode
 
 # Cleanup
