@@ -98,11 +98,11 @@ am__v_AR_0 = @echo "  AR    " $@;
 AM_V_at = $(am__v_at_@AM_V@)
 am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
 am__v_at_0 = @
-libsllp_a_AR = $(AR) $(ARFLAGS)
-libsllp_a_LIBADD =
-am_libsllp_a_OBJECTS = md5.$(OBJEXT) server_priv.$(OBJEXT) \
-	sllp.$(OBJEXT) server.$(OBJEXT) client.$(OBJEXT)
-libsllp_a_OBJECTS = $(am_libsllp_a_OBJECTS)
+libbsmp_a_AR = $(AR) $(ARFLAGS)
+libbsmp_a_LIBADD =
+am_libbsmp_a_OBJECTS = md5.$(OBJEXT) server_priv.$(OBJEXT) \
+	bsmp.$(OBJEXT) server.$(OBJEXT) client.$(OBJEXT)
+libbsmp_a_OBJECTS = $(am_libbsmp_a_OBJECTS)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/build-aux/depcomp
 am__depfiles_maybe = depfiles
@@ -123,8 +123,8 @@ am__v_CCLD_0 = @echo "  CCLD  " $@;
 AM_V_GEN = $(am__v_GEN_@AM_V@)
 am__v_GEN_ = $(am__v_GEN_@AM_DEFAULT_V@)
 am__v_GEN_0 = @echo "  GEN   " $@;
-SOURCES = $(libsllp_a_SOURCES)
-DIST_SOURCES = $(libsllp_a_SOURCES)
+SOURCES = $(libbsmp_a_SOURCES)
+DIST_SOURCES = $(libbsmp_a_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -222,17 +222,17 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-lib_LIBRARIES = libsllp.a
-libsllp_a_SOURCES = \
+lib_LIBRARIES = libbsmp.a
+libbsmp_a_SOURCES = \
           md5/md5.c md5/md5.h\
           server_priv.h server_priv.c\
-          sllp_priv.h\
-          sllp.h sllp.c\
+          bsmp_priv.h\
+          bsmp.h bsmp.c\
           client.h server.h\
           server.c client.c
 
-otherincludedir = $(includedir)/sllp
-otherinclude_HEADERS = sllp.h client.h server.h
+otherincludedir = $(includedir)/bsmp
+otherinclude_HEADERS = bsmp.h client.h server.h
 all: all-am
 
 .SUFFIXES:
@@ -298,10 +298,10 @@ uninstall-libLIBRARIES:
 
 clean-libLIBRARIES:
 	-test -z "$(lib_LIBRARIES)" || rm -f $(lib_LIBRARIES)
-libsllp.a: $(libsllp_a_OBJECTS) $(libsllp_a_DEPENDENCIES) $(EXTRA_libsllp_a_DEPENDENCIES) 
-	$(AM_V_at)-rm -f libsllp.a
-	$(AM_V_AR)$(libsllp_a_AR) libsllp.a $(libsllp_a_OBJECTS) $(libsllp_a_LIBADD)
-	$(AM_V_at)$(RANLIB) libsllp.a
+libbsmp.a: $(libbsmp_a_OBJECTS) $(libbsmp_a_DEPENDENCIES) $(EXTRA_libbsmp_a_DEPENDENCIES) 
+	$(AM_V_at)-rm -f libbsmp.a
+	$(AM_V_AR)$(libbsmp_a_AR) libbsmp.a $(libbsmp_a_OBJECTS) $(libbsmp_a_LIBADD)
+	$(AM_V_at)$(RANLIB) libbsmp.a
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -309,11 +309,11 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bsmp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/client.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/md5.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/server.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/server_priv.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sllp.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

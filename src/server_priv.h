@@ -1,8 +1,8 @@
-#ifndef SLLP_SERVER_PRIV_H
-#define SLLP_SERVER_PRIV_H
+#ifndef BSMP_SERVER_PRIV_H
+#define BSMP_SERVER_PRIV_H
 
 #include <stdint.h>
-#include "sllp.h"
+#include "bsmp.h"
 #include "server.h"
 
 #define VERSION     2
@@ -36,28 +36,28 @@ struct generic_list
 };
 
 #define SERVER_CMD_FUNCTION(name) \
-    void name (sllp_server_t *server, struct message *recv_msg, \
+    void name (bsmp_server_t *server, struct message *recv_msg, \
                struct message *send_msg)
 
 typedef SERVER_CMD_FUNCTION((*command_function_t));
 
-struct sllp_server
+struct bsmp_server
 {
-    struct sllp_var_ptr_list    vars;
-    struct sllp_group_list      groups;
-    struct sllp_curve_ptr_list  curves;
-    struct sllp_func_ptr_list   funcs;
+    struct bsmp_var_ptr_list    vars;
+    struct bsmp_group_list      groups;
+    struct bsmp_curve_ptr_list  curves;
+    struct bsmp_func_ptr_list   funcs;
 
-    struct sllp_var             *modified_list[SLLP_MAX_VARIABLES+1];
-    sllp_hook_t                 hook;
+    struct bsmp_var             *modified_list[BSMP_MAX_VARIABLES+1];
+    bsmp_hook_t                 hook;
 };
 
-enum sllp_err var_check     (struct sllp_var *var);
-enum sllp_err curve_check   (struct sllp_curve *curve);
-enum sllp_err func_check    (struct sllp_func *func);
+enum bsmp_err var_check     (struct bsmp_var *var);
+enum bsmp_err curve_check   (struct bsmp_curve *curve);
+enum bsmp_err func_check    (struct bsmp_func *func);
 
-void          group_init    (struct sllp_group *grp, uint8_t id);
-void          group_add_var (struct sllp_group *grp, struct sllp_var *var);
+void          group_init    (struct bsmp_group *grp, uint8_t id);
+void          group_add_var (struct bsmp_group *grp, struct bsmp_var *var);
 
 SERVER_CMD_FUNCTION (query_version);
 SERVER_CMD_FUNCTION (var_query_list);

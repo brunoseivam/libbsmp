@@ -1,4 +1,4 @@
-Full libsllp example
+Full libbsmp example
 ====================
 
 This is program that attempts to show examples of usage for all API calls.

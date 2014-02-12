@@ -1,9 +1,9 @@
-libsllp
+libbsmp
 =======
 
 Sirius Low Level Protocol Library
 
-<code>libsllp</code> was merged from the two previous libraries: <code>libsllpserver</code> and <code>libsllpclient</code>.
+<code>libbsmp</code> was merged from the two previous libraries: <code>libsllpserver</code> and <code>libsllpclient</code>.
 
 Installing:
 

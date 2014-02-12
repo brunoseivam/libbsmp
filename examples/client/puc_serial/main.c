@@ -1,4 +1,4 @@
-#include <sllp/client.h>
+#include <bsmp/client.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -9,8 +9,8 @@
 #define SERIAL_HDR_SIZE         1
 #define SERIAL_CSUM_SIZE        1
 #define SERIAL_PKT_WRAP_SIZE    SERIAL_HDR_SIZE + SERIAL_CSUM_SIZE
-#define PACKET_SIZE             SLLP_MAX_MESSAGE + SERIAL_PKT_WRAP_SIZE
-#define PACKET_HEADER           SERIAL_HDR_SIZE + SLLP_HEADER_SIZE
+#define PACKET_SIZE             BSMP_MAX_MESSAGE + SERIAL_PKT_WRAP_SIZE
+#define PACKET_HEADER           SERIAL_HDR_SIZE + BSMP_HEADER_SIZE
 
 #ifdef DEBUG
 void print_packet (char* pre, uint8_t *data, uint32_t size)
@@ -32,7 +32,7 @@ void print_packet (char* pre, uint8_t *data, uint32_t size)
 #endif
 
 #define TRY(err, func) \
-do { if((err = func)) { fprintf(stderr, #func": %s\n", sllp_error_str(err));\
+do { if((err = func)) { fprintf(stderr, #func": %s\n", bsmp_error_str(err));\
                         return; }}while(0)
 
 char *port;
@@ -116,23 +116,23 @@ int puc_recv(uint8_t *data, uint32_t *count)
     return EXIT_SUCCESS;
 }
 
-void print_vars(struct sllp_var_info_list *vars)
+void print_vars(struct bsmp_var_info_list *vars)
 {
     unsigned int i;
     for(i = 0; i < vars->count; ++i)
     {
-        struct sllp_var_info *var = &vars->list[i];
+        struct bsmp_var_info *var = &vars->list[i];
         printf("VAR id=%d size=%d writable=%d\n", var->id, var->size, var->writable);
     }
 }
 
-void print_groups(struct sllp_group_list *groups)
+void print_groups(struct bsmp_group_list *groups)
 {
     unsigned int i;
     for(i = 0; i < groups->count; ++i)
     {
         unsigned int j;
-        struct sllp_group *grp = &groups->list[i];
+        struct bsmp_group *grp = &groups->list[i];
         printf("GROUP id=%d writable=%d size=%d ", grp->id, grp->writable, grp->vars.count);
         printf("vars=[ ");
         for(j = 0; j < grp->vars.count; ++j)
@@ -141,12 +141,12 @@ void print_groups(struct sllp_group_list *groups)
     }
 }
 
-void print_curves(struct sllp_curve_info_list *curves)
+void print_curves(struct bsmp_curve_info_list *curves)
 {
     unsigned int i;
     for(i = 0; i < curves->count; ++i)
     {
-        struct sllp_curve_info *curve = &curves->list[i];
+        struct bsmp_curve_info *curve = &curves->list[i];
         printf("CURVE id=%d blocks=%d writable=%d ", curve->id, curve->nblocks, curve->writable);
         printf("csum=");
 
@@ -157,15 +157,15 @@ void print_curves(struct sllp_curve_info_list *curves)
     }
 }
 
-void test_analog(sllp_client_t *client, struct sllp_var_info *ad,
-                 struct sllp_var_info *da)
+void test_analog(bsmp_client_t *client, struct bsmp_var_info *ad,
+                 struct bsmp_var_info *da)
 {
     uint8_t read_back[3] = {0};
     uint8_t adjust[3] = {0, 0, 0};
 
     puts("Test analog board");
 
-    enum sllp_err err;
+    enum bsmp_err err;
     unsigned int i;
     int written;
     uint32_t value;
@@ -184,7 +184,7 @@ void test_analog(sllp_client_t *client, struct sllp_var_info *ad,
 
         written += printf("Write: %3.3f ", dvalue);
 
-        TRY(err, sllp_write_read_vars(client,da,adjust,ad,read_back));
+        TRY(err, bsmp_write_read_vars(client,da,adjust,ad,read_back));
 
         value = (read_back[0] << 16) + (read_back[1] << 8) + read_back[2];
         dvalue = (((double)value)/(1 << 18))*20.0 - 10.0;
@@ -197,24 +197,24 @@ void test_analog(sllp_client_t *client, struct sllp_var_info *ad,
     puts("Done                        ");
 }
 
-void test_digital(sllp_client_t *client, struct sllp_var_info *din,
-                  struct sllp_var_info *dout)
+void test_digital(bsmp_client_t *client, struct bsmp_var_info *din,
+                  struct bsmp_var_info *dout)
 {
     puts("Test digital board");
 
-    enum sllp_err err;
+    enum bsmp_err err;
     uint8_t read_back[1], adjust[1];
 
     if(dout)
     {
         adjust[0] = 0x55;
         printf("Write %02X ", adjust[0]);
-        TRY(err, sllp_write_var(client, dout, adjust));
+        TRY(err, bsmp_write_var(client, dout, adjust));
     }
 
     if(din)
     {
-        TRY(err, sllp_read_var(client, din, read_back));
+        TRY(err, bsmp_read_var(client, din, read_back));
         printf("Read %02X\n", read_back[0]);
     }
 
@@ -222,12 +222,12 @@ void test_digital(sllp_client_t *client, struct sllp_var_info *din,
     {
         adjust[0] = 0xF0;
         printf("AND %02X ", adjust[0]);
-        TRY(err, sllp_bin_op_var(client, BIN_OP_AND, dout, adjust));
+        TRY(err, bsmp_bin_op_var(client, BIN_OP_AND, dout, adjust));
     }
 
     if(din)
     {
-        TRY(err, sllp_read_var(client, din, read_back));
+        TRY(err, bsmp_read_var(client, din, read_back));
         printf("Read %02X\n", read_back[0]);
     }
 
@@ -235,12 +235,12 @@ void test_digital(sllp_client_t *client, struct sllp_var_info *din,
     {
         adjust[0] = 0xFF;
         printf("TOGGLE %02X ", adjust[0]);
-        TRY(err, sllp_bin_op_var(client, BIN_OP_OR, dout, adjust));
+        TRY(err, bsmp_bin_op_var(client, BIN_OP_OR, dout, adjust));
     }
 
     if(din)
     {
-        TRY(err, sllp_read_var(client, din, read_back));
+        TRY(err, bsmp_read_var(client, din, read_back));
         printf("Read %02X\n", read_back[0]);
     }
 
@@ -269,27 +269,27 @@ int main(int argc, char **argv)
     printf("PUC[%d]  %s @ %d bps\n", address, port, baud);
 
     // Create a new client instance
-    sllp_client_t *sllp = sllp_client_new(puc_send, puc_recv);
+    bsmp_client_t *bsmp = bsmp_client_new(puc_send, puc_recv);
 
-    if(!sllp)
+    if(!bsmp)
     {
-        fprintf(stderr, "Error allocating SLLP instance\n");
+        fprintf(stderr, "Error allocating BSMP instance\n");
         goto exit_close;
     }
 
     // Initialize the client instance (communication must be already working)
-    enum sllp_err err;
-    if((err = sllp_client_init(sllp)))
+    enum bsmp_err err;
+    if((err = bsmp_client_init(bsmp)))
     {
-        fprintf(stderr, "sllp_client_init: %s\n", sllp_error_str(err));
+        fprintf(stderr, "bsmp_client_init: %s\n", bsmp_error_str(err));
         goto exit_destroy;
     }
 
     // Get the variables list
-    struct sllp_var_info_list *vars;
-    if((err = sllp_get_vars_list(sllp, &vars)))
+    struct bsmp_var_info_list *vars;
+    if((err = bsmp_get_vars_list(bsmp, &vars)))
     {
-        fprintf(stderr, "sllp_get_vars_list: %s\n", sllp_error_str(err));
+        fprintf(stderr, "bsmp_get_vars_list: %s\n", bsmp_error_str(err));
         goto exit_destroy;
     }
 
@@ -297,10 +297,10 @@ int main(int argc, char **argv)
     print_vars(vars);
 
     // Get the groups list
-    struct sllp_group_list *groups;
-    if((err = sllp_get_groups_list(sllp, &groups)))
+    struct bsmp_group_list *groups;
+    if((err = bsmp_get_groups_list(bsmp, &groups)))
     {
-        fprintf(stderr, "sllp_get_groups_list: %s\n", sllp_error_str(err));
+        fprintf(stderr, "bsmp_get_groups_list: %s\n", bsmp_error_str(err));
         goto exit_destroy;
     }
 
@@ -308,10 +308,10 @@ int main(int argc, char **argv)
     print_groups(groups);
 
     // Get the curves list
-    struct sllp_curve_info_list *curves;
-    if((err = sllp_get_curves_list(sllp, &curves)))
+    struct bsmp_curve_info_list *curves;
+    if((err = bsmp_get_curves_list(bsmp, &curves)))
     {
-        fprintf(stderr, "sllp_get_curves_list: %s\n", sllp_error_str(err));
+        fprintf(stderr, "bsmp_get_curves_list: %s\n", bsmp_error_str(err));
         goto exit_destroy;
     }
 
@@ -328,22 +328,22 @@ int main(int argc, char **argv)
         BASE_VAR_SYNC_PROGRESS,*/
 
     // Search the list for the first of each type of variable
-    struct sllp_var_info *detected_boards   = &vars->list[0];
-    struct sllp_var_info *pm_var            = &vars->list[1];
-    struct sllp_var_info *pm_period         = &vars->list[2];
-    struct sllp_var_info *pm_index          = &vars->list[3];
-    struct sllp_var_info *pm_running        = &vars->list[4];
-    struct sllp_var_info *sync_var          = &vars->list[5];
-    struct sllp_var_info *sync_curve        = &vars->list[6];
-    struct sllp_var_info *sync_progress     = &vars->list[7];
+    struct bsmp_var_info *detected_boards   = &vars->list[0];
+    struct bsmp_var_info *pm_var            = &vars->list[1];
+    struct bsmp_var_info *pm_period         = &vars->list[2];
+    struct bsmp_var_info *pm_index          = &vars->list[3];
+    struct bsmp_var_info *pm_running        = &vars->list[4];
+    struct bsmp_var_info *sync_var          = &vars->list[5];
+    struct bsmp_var_info *sync_curve        = &vars->list[6];
+    struct bsmp_var_info *sync_progress     = &vars->list[7];
 
-    struct sllp_var_info *first_ad      = NULL, *first_da       = NULL;
-    struct sllp_var_info *first_digin   = NULL, *first_digout   = NULL;
+    struct bsmp_var_info *first_ad      = NULL, *first_da       = NULL;
+    struct bsmp_var_info *first_digin   = NULL, *first_digout   = NULL;
 
     unsigned int i;
     for(i = 8; i < vars->count; ++i)
     {
-        struct sllp_var_info *v = &vars->list[i];
+        struct bsmp_var_info *v = &vars->list[i];
         if(!first_ad && v->size == 3 && !v->writable)
             first_ad = v;
         else if(!first_da && v->size == 3 && v->writable)
@@ -361,7 +361,7 @@ int main(int argc, char **argv)
 
     puts("\nImportant variables:\n");
     uint8_t det[4];
-    sllp_read_var(sllp, detected_boards, det);
+    bsmp_read_var(bsmp, detected_boards, det);
     printf("Detected boards: %2X %2X %2X %2X\n", det[0], det[1], det[2], det[3]);
 
     if(first_ad)     printf("FIRST AD     id=%d\n", first_ad->id);
@@ -370,14 +370,14 @@ int main(int argc, char **argv)
     if(first_digout) printf("FIRST DIGOUT id=%d\n", first_digout->id);
 
     if(first_ad && first_da)
-        test_analog(sllp, first_ad, first_da);
+        test_analog(bsmp, first_ad, first_da);
 
     if(first_digin && first_digout)
-        test_digital(sllp, first_digin, first_digout);
+        test_digital(bsmp, first_digin, first_digout);
 
 exit_destroy:
-    sllp_client_destroy(sllp);
-    puts("SLLP deallocated");
+    bsmp_client_destroy(bsmp);
+    puts("BSMP deallocated");
 exit_close:
     close(serial);
     puts("Serial port closed");

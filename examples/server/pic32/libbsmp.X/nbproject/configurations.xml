@@ -7,11 +7,11 @@
       <logicalFolder name="f1" displayName="md5" projectFiles="true">
         <itemPath>../../../../src/md5/md5.h</itemPath>
       </logicalFolder>
-      <itemPath>../../../../src/sllp.h</itemPath>
       <itemPath>../../../../src/client.h</itemPath>
       <itemPath>../../../../src/server.h</itemPath>
       <itemPath>../../../../src/server_priv.h</itemPath>
-      <itemPath>../../../../src/sllp_priv.h</itemPath>
+      <itemPath>../../../../src/bsmp.h</itemPath>
+      <itemPath>../../../../src/bsmp_priv.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -23,10 +23,10 @@
       <logicalFolder name="f1" displayName="md5" projectFiles="true">
         <itemPath>../../../../src/md5/md5.c</itemPath>
       </logicalFolder>
-      <itemPath>../../../../src/sllp.c</itemPath>
       <itemPath>../../../../src/client.c</itemPath>
       <itemPath>../../../../src/server.c</itemPath>
       <itemPath>../../../../src/server_priv.c</itemPath>
+      <itemPath>../../../../src/bsmp.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
