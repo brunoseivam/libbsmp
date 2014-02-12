@@ -131,7 +131,7 @@ struct sllp_group
 {
     uint8_t id;           // ID of the group
     bool    writable;     // Whether all variables in the group are writable
-    uint8_t size;         // Sum of the sizes of all variables in the group
+    uint16_t size;        // Sum of the sizes of all variables in the group
 
     // List of pointers to the variables of this group
     struct sllp_var_info_ptr_list vars;
