@@ -40,10 +40,12 @@
 // UART Driver Enable
 #define UART_DE                 LATFbits.LATF12 // Driver enable bit of the UART2
 
-#define SERIAL_HEADER           2   // Dest, source
+#define SERIAL_HEADER           1   // Destination
 #define SERIAL_CSUM             1
 
-#define SERIAL_ADDRESS          1   // Own Address
+#define SERIAL_ADDRESS          1   // My Address
+
+#define SERIAL_BUF_SIZE         (SERIAL_HEADER+16384+SERIAL_CSUM)
 
 void write_PORTE (uint8_t value)
 {
@@ -72,7 +74,7 @@ void hook(enum bsmp_operation op, struct bsmp_var **list)
 
 struct serial_buffer
 {
-    uint8_t data[SERIAL_HEADER+BSMP_MAX_MESSAGE+SERIAL_CSUM];
+    uint8_t data[SERIAL_BUF_SIZE];
     uint16_t index;
     uint8_t csum;
 };
@@ -98,7 +100,7 @@ void __ISR(_UART_2_VECTOR, IPL6SRS) serial_byte_received (void)
 
     T2CONCLR = _T2CON_ON_MASK;  // Turn TIMER2 off
 
-    while (UARTReceivedDataIsAvailable(UART2))
+    while (UARTReceivedDataIsAvailable(UART2) && recv_buffer.index < SERIAL_BUF_SIZE)
     {
         recv_buffer.data[recv_buffer.index++] = UARTGetDataByte(UART2);
         recv_buffer.csum += recv_buffer.data[recv_buffer.index++];
