@@ -1,6 +1,6 @@
 #include "server.h"
 #include "server_priv.h"
-#include "sllp_priv.h"
+#include "bsmp_priv.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -10,7 +10,7 @@
 
 struct
 {
-    struct sllp_server list[SERVER_POOL_SIZE];
+    struct bsmp_server list[SERVER_POOL_SIZE];
     unsigned int count;
     unsigned int allocated;
 }server_pool = {
@@ -19,7 +19,7 @@ struct
     .allocated = 0,
 };
 
-static int server_pool_index (struct sllp_server *server)
+static int server_pool_index (struct bsmp_server *server)
 {
     int i;
     for(i = 0; i < SERVER_POOL_SIZE; ++i)
@@ -28,7 +28,7 @@ static int server_pool_index (struct sllp_server *server)
     return -1;
 }
 
-static void server_init (struct sllp_server *server)
+static void server_init (struct bsmp_server *server)
 {
     memset(server, 0, sizeof(*server));
 
@@ -39,9 +39,9 @@ static void server_init (struct sllp_server *server)
     server->groups.count = GROUP_STANDARD_COUNT;
 }
 
-sllp_server_t *sllp_server_new (void)
+bsmp_server_t *bsmp_server_new (void)
 {
-    struct sllp_server *server = (struct sllp_server*) malloc(sizeof(*server));
+    struct bsmp_server *server = (struct bsmp_server*) malloc(sizeof(*server));
 
     if(!server)
         return NULL;
@@ -51,7 +51,7 @@ sllp_server_t *sllp_server_new (void)
     return server;
 }
 
-sllp_server_t *sllp_server_new_from_pool (void)
+bsmp_server_t *bsmp_server_new_from_pool (void)
 {
     if(server_pool.count == SERVER_POOL_SIZE)
         return NULL;
@@ -62,17 +62,17 @@ sllp_server_t *sllp_server_new_from_pool (void)
     ++server_pool.count;
     server_pool.allocated |= (1 << i);
 
-    struct sllp_server *server = &server_pool.list[i];
+    struct bsmp_server *server = &server_pool.list[i];
 
     server_init(server);
 
     return server;
 }
 
-enum sllp_err sllp_server_destroy (sllp_server_t* server)
+enum bsmp_err bsmp_server_destroy (bsmp_server_t* server)
 {
     if(!server)
-        return SLLP_ERR_PARAM_INVALID;
+        return BSMP_ERR_PARAM_INVALID;
 
     int pool_index = server_pool_index(server);
 
@@ -84,29 +84,29 @@ enum sllp_err sllp_server_destroy (sllp_server_t* server)
         server_pool.allocated ^= 1 << pool_index;
     }
     else
-        return SLLP_ERR_PARAM_INVALID;
+        return BSMP_ERR_PARAM_INVALID;
 
-    return SLLP_SUCCESS;
+    return BSMP_SUCCESS;
 }
 
 #define SERVER_REGISTER(elem, max) \
     do {\
-        if(!server) return SLLP_ERR_PARAM_INVALID;\
-        enum sllp_err err;\
+        if(!server) return BSMP_ERR_PARAM_INVALID;\
+        enum bsmp_err err;\
         if((err = elem##_check(elem))) return err;\
-        if(server->elem##s.count >= max) return SLLP_ERR_OUT_OF_MEMORY;\
+        if(server->elem##s.count >= max) return BSMP_ERR_OUT_OF_MEMORY;\
         unsigned int i;\
         for(i = 0; i < server->elem##s.count; ++i)\
             if(server->elem##s.list[i] == elem)\
-                return SLLP_ERR_DUPLICATE;\
+                return BSMP_ERR_DUPLICATE;\
         server->elem##s.list[server->elem##s.count] = elem;\
         elem->info.id = server->elem##s.count++;\
     }while(0)
 
-enum sllp_err sllp_register_variable (sllp_server_t *server,
-                                      struct sllp_var *var)
+enum bsmp_err bsmp_register_variable (bsmp_server_t *server,
+                                      struct bsmp_var *var)
 {
-    SERVER_REGISTER(var, SLLP_MAX_VARIABLES);
+    SERVER_REGISTER(var, BSMP_MAX_VARIABLES);
 
     // Add to the group containing all variables
     group_add_var(&server->groups.list[GROUP_ALL_ID], var);
@@ -117,31 +117,31 @@ enum sllp_err sllp_register_variable (sllp_server_t *server,
     else
         group_add_var(&server->groups.list[GROUP_READ_ID], var);
 
-    return SLLP_SUCCESS;
+    return BSMP_SUCCESS;
 }
 
-enum sllp_err sllp_register_curve (sllp_server_t *server,
-                                   struct sllp_curve *curve)
+enum bsmp_err bsmp_register_curve (bsmp_server_t *server,
+                                   struct bsmp_curve *curve)
 {
-    SERVER_REGISTER(curve, SLLP_MAX_CURVES);
-    return SLLP_SUCCESS;
+    SERVER_REGISTER(curve, BSMP_MAX_CURVES);
+    return BSMP_SUCCESS;
 }
 
-enum sllp_err sllp_register_function (sllp_server_t *server,
-                                      struct sllp_func *func)
+enum bsmp_err bsmp_register_function (bsmp_server_t *server,
+                                      struct bsmp_func *func)
 {
-    SERVER_REGISTER(func, SLLP_MAX_FUNCTIONS);
-    return SLLP_SUCCESS;
+    SERVER_REGISTER(func, BSMP_MAX_FUNCTIONS);
+    return BSMP_SUCCESS;
 }
 
-enum sllp_err sllp_register_hook(sllp_server_t* server, sllp_hook_t hook)
+enum bsmp_err bsmp_register_hook(bsmp_server_t* server, bsmp_hook_t hook)
 {
     if(!server || !hook)
-        return SLLP_ERR_PARAM_INVALID;
+        return BSMP_ERR_PARAM_INVALID;
 
     server->hook = hook;
 
-    return SLLP_SUCCESS;
+    return BSMP_SUCCESS;
 }
 
 struct raw_message
@@ -183,12 +183,12 @@ static command_function_t command[256] =
     [CMD_FUNC_EXECUTE]          = func_execute
 };
 
-enum sllp_err sllp_process_packet (sllp_server_t *server,
-                                    struct sllp_raw_packet *request,
-                                    struct sllp_raw_packet *response)
+enum bsmp_err bsmp_process_packet (bsmp_server_t *server,
+                                    struct bsmp_raw_packet *request,
+                                    struct bsmp_raw_packet *response)
 {
     if(!server || !request || !response)
-        return SLLP_ERR_PARAM_INVALID;
+        return BSMP_ERR_PARAM_INVALID;
 
     // Interpret packet payload as a message
     struct raw_message *recv_raw_msg = (struct raw_message *) request->data;
@@ -207,8 +207,8 @@ enum sllp_err sllp_process_packet (sllp_server_t *server,
 
     // Check inconsistency between the size of the received data and the size
     // specified in the message header
-    if(request->len < SLLP_HEADER_SIZE ||
-       request->len != recv_msg.payload_size + SLLP_HEADER_SIZE)
+    if(request->len < BSMP_HEADER_SIZE ||
+       request->len != recv_msg.payload_size + BSMP_HEADER_SIZE)
         MESSAGE_SET_ANSWER(&send_msg, CMD_ERR_MALFORMED_MESSAGE);
     // Check existence of the requested command
     else if(!command[recv_msg.command_code])
@@ -221,7 +221,7 @@ enum sllp_err sllp_process_packet (sllp_server_t *server,
     send_raw_msg->size[0] = send_msg.payload_size >> 8;
     send_raw_msg->size[1] = send_msg.payload_size;
 
-    response->len = send_msg.payload_size + SLLP_HEADER_SIZE;
+    response->len = send_msg.payload_size + BSMP_HEADER_SIZE;
 
-    return SLLP_SUCCESS;
+    return BSMP_SUCCESS;
 }

@@ -1,12 +1,12 @@
 /* Private definitions for server and client */
 
-#ifndef SLLP_PRIV_H
-#define SLLP_PRIV_H
+#ifndef BSMP_PRIV_H
+#define BSMP_PRIV_H
 
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "sllp.h"
+#include "bsmp.h"
 
 #define WRITABLE_MASK       0x80
 #define SIZE_MASK           0x7F

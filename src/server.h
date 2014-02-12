@@ -1,27 +1,27 @@
-#ifndef SLLP_SERVER_H
-#define SLLP_SERVER_H
+#ifndef BSMP_SERVER_H
+#define BSMP_SERVER_H
 
-#include "sllp.h"
+#include "bsmp.h"
 
 // Types
 
 // Handle to a server instance
-typedef struct sllp_server sllp_server_t;
+typedef struct bsmp_server bsmp_server_t;
 
 // Hook function. Called before the values of a set of variables are read and
 // after values of a set of variables are written.
-enum sllp_operation
+enum bsmp_operation
 {
-    SLLP_OP_READ,                   // Read command arrived
-    SLLP_OP_WRITE,                  // Write command arrived
+    BSMP_OP_READ,                   // Read command arrived
+    BSMP_OP_WRITE,                  // Write command arrived
 };
 
-typedef void (*sllp_hook_t) (enum sllp_operation op, struct sllp_var **list);
+typedef void (*bsmp_hook_t) (enum bsmp_operation op, struct bsmp_var **list);
 
 // Structures
 
 // Represent a packet that either was received or is to be sent
-struct sllp_raw_packet
+struct bsmp_raw_packet
 {
     uint8_t *data;
     uint16_t len;
@@ -29,41 +29,41 @@ struct sllp_raw_packet
 
 /**
  * Allocate a new server instance, returning a handle to it. This instance
- * should be deallocated with sllp_destroy after its use. The instance returned
+ * should be deallocated with bsmp_destroy after its use. The instance returned
  * is already initialized. The instance is allocated with malloc().
  *
  * @return A handle to a server or NULL if there wasn't enough memory to do the
  *         allocation.
  */
-sllp_server_t *sllp_server_new (void);
+bsmp_server_t *bsmp_server_new (void);
 
 /**
  * Allocate a new server instance, returning a handle to it. This instance
- * should be deallocated with sllp_destroy after its use. The instance returned
+ * should be deallocated with bsmp_destroy after its use. The instance returned
  * is already initialized. The instance is returned from a pool of instances
  * allocated on the heap.
  *
  * @return A handle to a server or NULL if there wasn't enough memory to do the
  *         allocation.
  */
-sllp_server_t *sllp_server_new_from_pool (void);
+bsmp_server_t *bsmp_server_new_from_pool (void);
 
 /**
  * Deallocate a server instance
  * 
  * @param server [input] Handle to the instance to be deallocated.
  * 
- * @return SLLP_SUCCESS or one of the following errors:
+ * @return BSMP_SUCCESS or one of the following errors:
  * <ul>
- *   <li>SLLP_ERR_PARAM_INVALID: server is a NULL pointer. </li>
+ *   <li>BSMP_ERR_PARAM_INVALID: server is a NULL pointer. </li>
  * </ul>
  */
-enum sllp_err sllp_server_destroy (sllp_server_t *server);
+enum bsmp_err bsmp_server_destroy (bsmp_server_t *server);
 
 /**
  * Register a variable with a server instance. The memory pointed by the var
  * parameter must remain valid throughout the entire lifespan of the server
- * instance. The id field of the var parameter will be written by the SLLP lib.
+ * instance. The id field of the var parameter will be written by the BSMP lib.
  *
  * The fields writable, size and data of the var parameter must be filled
  * correctly.
@@ -73,20 +73,20 @@ enum sllp_err sllp_server_destroy (sllp_server_t *server);
  * @param server [input] Handle to the instance.
  * @param var [input] Structure describing the variable to be registered.
  *
- * @return SLLP_SUCCESS or one of the following errors:
+ * @return BSMP_SUCCESS or one of the following errors:
  * <ul>
- *   <li> SLLP_ERR_PARAM_INVALID: server or var->data is a NULL pointer. </li>
- *   <li> SLLP_PARAM_OUT_OF_RANGE: var->size is less than 1 or greater than 127.
+ *   <li> BSMP_ERR_PARAM_INVALID: server or var->data is a NULL pointer. </li>
+ *   <li> BSMP_PARAM_OUT_OF_RANGE: var->size is less than 1 or greater than 127.
  *   </li>
  * </ul>
  */
-enum sllp_err sllp_register_variable (sllp_server_t *server,
-                                      struct sllp_var *var);
+enum bsmp_err bsmp_register_variable (bsmp_server_t *server,
+                                      struct bsmp_var *var);
 
 /**
- * Register a curve with a SLLP instance. The memory pointed by the curve
+ * Register a curve with a BSMP instance. The memory pointed by the curve
  * parameter must remain valid throughout the entire lifespan of the server
- * instance. The id field of the curve parameter will be written by the SLLP
+ * instance. The id field of the curve parameter will be written by the BSMP
  * lib.
  *
  * The fields writable, nblocks and read_block must be filled correctly.
@@ -98,48 +98,48 @@ enum sllp_err sllp_register_variable (sllp_server_t *server,
  * @param server [input] Handle to the server instance.
  * @param curve [input] Pointer to the curve to be registered.
  *
- * @return SLLP_SUCCESS or one of the following errors:
+ * @return BSMP_SUCCESS or one of the following errors:
  * <ul>
- *   <li>SLLP_ERR_PARAM_INVALID: either server or curve is a NULL pointer.</li>
- *   <li>SLLP_ERR_PARAM_INVALID: curve->info.nblocks less than
- *                               SLLP_CURVE_MIN_BLOCKS or greater than
- *                               SLLP_CURVE_MAX_BLOCKS.</li>
- *   <li>SLLP_ERR_PARAM_INVALID: curve->read_block is NULL.</li>
- *   <li>SLLP_ERR_PARAM_INVALID: curve->writable is true and curve->write_block
+ *   <li>BSMP_ERR_PARAM_INVALID: either server or curve is a NULL pointer.</li>
+ *   <li>BSMP_ERR_PARAM_INVALID: curve->info.nblocks less than
+ *                               BSMP_CURVE_MIN_BLOCKS or greater than
+ *                               BSMP_CURVE_MAX_BLOCKS.</li>
+ *   <li>BSMP_ERR_PARAM_INVALID: curve->read_block is NULL.</li>
+ *   <li>BSMP_ERR_PARAM_INVALID: curve->writable is true and curve->write_block
  *                               is NULL.</li>
- *   <li>SLLP_ERR_PARAM_INVALID: curve->writable is false and curve->write_block
+ *   <li>BSMP_ERR_PARAM_INVALID: curve->writable is false and curve->write_block
  *                               is not NULL.</li>
  * </ul>
  */
-enum sllp_err sllp_register_curve (sllp_server_t *server,
-                                   struct sllp_curve *curve);
+enum bsmp_err bsmp_register_curve (bsmp_server_t *server,
+                                   struct bsmp_curve *curve);
 
 /**
- * Register a function with a SLLP instance. The memory pointed by the func
+ * Register a function with a BSMP instance. The memory pointed by the func
  * parameter must remain valid throughout the entire lifespan of the server
  * instance. The info.id field of the func parameter will be written by the
- * SLLP lib.
+ * BSMP lib.
  *
  * The fields func_p, info.input_size and info.output_size must be filled
- * correctly. info.input_size must be less than or equal to SLLP_FUNC_MAX_INPUT.
+ * correctly. info.input_size must be less than or equal to BSMP_FUNC_MAX_INPUT.
  * Likewise, info.output_size must be less than or equal to
- * SLLP_FUNC_MAS_OUTPUT.
+ * BSMP_FUNC_MAS_OUTPUT.
  *
  * @param server [input] Handle to the server instance.
  * @param func [input] Pointer to the function to be registered.
  *
- * @return SLLP_SUCCESS or one of the following errors:
+ * @return BSMP_SUCCESS or one of the following errors:
  * <ul>
- *   <li>SLLP_ERR_PARAM_INVALID: either server or func is a NULL pointer.</li>
- *   <li>SLLP_ERR_PARAM_INVALID: func->func_p is NULL.</li>
- *   <li>SLLP_ERR_PARAM_OUT_OF_RANGE: info.input_size is greater than
- *                                    SLLP_FUNC_MAX_INPUT.
- *   <li>SLLP_ERR_PARAM_OUT_OF_RANGE: info.output_size is greater than
- *                                    SLLP_FUNC_MAX_OUTPUT.
+ *   <li>BSMP_ERR_PARAM_INVALID: either server or func is a NULL pointer.</li>
+ *   <li>BSMP_ERR_PARAM_INVALID: func->func_p is NULL.</li>
+ *   <li>BSMP_ERR_PARAM_OUT_OF_RANGE: info.input_size is greater than
+ *                                    BSMP_FUNC_MAX_INPUT.
+ *   <li>BSMP_ERR_PARAM_OUT_OF_RANGE: info.output_size is greater than
+ *                                    BSMP_FUNC_MAX_OUTPUT.
  * </ul>
  */
-enum sllp_err sllp_register_function (sllp_server_t *server,
-                                      struct sllp_func *func);
+enum bsmp_err bsmp_register_function (bsmp_server_t *server,
+                                      struct bsmp_func *func);
 
 /**
  * Register a function that will be called in two moments:
@@ -156,18 +156,18 @@ enum sllp_err sllp_register_function (sllp_server_t *server,
  * function by simply passing a NULL pointer in the hook parameter.
  *
  * A hook function receives two parameters: the first one indicating the type
- * of operation being performed (specified in enum sllp_operation) and the
+ * of operation being performed (specified in enum bsmp_operation) and the
  * second one containing the list of variables being affected by that operation.
  *
- * @param server [input] Handle to a SLLP instance.
+ * @param server [input] Handle to a BSMP instance.
  * @param hook [input] Hook function
  *
- * @return SLLP_SUCCESS or one of the following errors:
+ * @return BSMP_SUCCESS or one of the following errors:
  * <ul>
- *   <li> SLLP_ERR_INVALID_PARAM: sllp is a NULL pointer.
+ *   <li> BSMP_ERR_INVALID_PARAM: bsmp is a NULL pointer.
  * </ul>
  */
-enum sllp_err sllp_register_hook (sllp_server_t *server, sllp_hook_t hook);
+enum bsmp_err bsmp_register_hook (bsmp_server_t *server, bsmp_hook_t hook);
 
 /**
  * Process a received message and prepare an answer.
@@ -176,15 +176,15 @@ enum sllp_err sllp_register_hook (sllp_server_t *server, sllp_hook_t hook);
  * @param request [input] The message to be processed.
  * @param response [output] The answer to be sent
  *
- * @return SLLP_SUCCESS or one of the following errors:
+ * @return BSMP_SUCCESS or one of the following errors:
  * <ul>
  *   <li> SSLP_ERR_PARAM_INVALID: Either server, request, or response is
  *                                a NULL pointer.</li>
  * </ul>
  */
-enum sllp_err sllp_process_packet (sllp_server_t *server,
-                                   struct sllp_raw_packet *request,
-                                   struct sllp_raw_packet *response);
+enum bsmp_err bsmp_process_packet (bsmp_server_t *server,
+                                   struct bsmp_raw_packet *request,
+                                   struct bsmp_raw_packet *response);
 
 #endif
 
