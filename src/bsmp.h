@@ -69,6 +69,7 @@ enum bsmp_err
                                     // object
     BSMP_ERR_COMM,                  // There was a communication error reported
                                     // by one of the communication functions.
+    BSMP_ERR_NOT_INITIALIZED,       // Instance wasn't initialized
     BSMP_ERR_MAX
 };
 

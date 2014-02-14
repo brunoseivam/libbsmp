@@ -8,7 +8,8 @@ static char* error_str[BSMP_ERR_MAX] =
                                       " range",
     [BSMP_ERR_OUT_OF_MEMORY]        = "Not enough memory to complete request",
     [BSMP_ERR_DUPLICATE]            = "Entity already registered",
-    [BSMP_ERR_COMM]                 = "Sending or receiving a message failed"
+    [BSMP_ERR_COMM]                 = "Sending or receiving a message failed",
+    [BSMP_ERR_NOT_INITIALIZED]      = "Instance not initialized",
 };
 
 #define BINOPS_FUNC(name, operation)\
