@@ -1,14 +1,15 @@
-#include "sllp.h"
+#include "bsmp.h"
 
-static char* error_str[SLLP_ERR_MAX] =
+static char* error_str[BSMP_ERR_MAX] =
 {
-    [SLLP_SUCCESS]                  = "Success",
-    [SLLP_ERR_PARAM_INVALID]        = "An invalid parameter was passed",
-    [SLLP_ERR_PARAM_OUT_OF_RANGE]   = "A parameter was out of the acceptable"
+    [BSMP_SUCCESS]                  = "Success",
+    [BSMP_ERR_PARAM_INVALID]        = "An invalid parameter was passed",
+    [BSMP_ERR_PARAM_OUT_OF_RANGE]   = "A parameter was out of the acceptable"
                                       " range",
-    [SLLP_ERR_OUT_OF_MEMORY]        = "Not enough memory to complete request",
-    [SLLP_ERR_DUPLICATE]            = "Entity already registered",
-    [SLLP_ERR_COMM]                 = "Sending or receiving a message failed"
+    [BSMP_ERR_OUT_OF_MEMORY]        = "Not enough memory to complete request",
+    [BSMP_ERR_DUPLICATE]            = "Entity already registered",
+    [BSMP_ERR_COMM]                 = "Sending or receiving a message failed",
+    [BSMP_ERR_NOT_INITIALIZED]      = "Instance not initialized",
 };
 
 #define BINOPS_FUNC(name, operation)\
@@ -32,7 +33,7 @@ bin_op_function bin_op[256] =
     ['T'] = binops_xor     // TOGGLE BITS
 };
 
-char *sllp_error_str (enum sllp_err error)
+char *bsmp_error_str (enum bsmp_err error)
 {
     return error_str[error];
 }

@@ -1,4 +1,4 @@
-AC_INIT([libsllp], [1.00], [bruno.martins@lnls.br])
+AC_INIT([libbsmp], [2.00], [bruno.martins@lnls.br])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([foreign -Wall -Werror silent-rules])
 # Makes ./configure --enable-silent-rules possible

@@ -22,7 +22,7 @@
 #pragma config ICESEL   = ICS_PGx2      // ICE/ICD Comm Channel Select
 #pragma config DEBUG    = OFF           // Debugger Disabled for Starter Kit
 
-#include "../../../../src/sllp_server.h"
+#include "server.h"
 #include <peripheral/ports.h>
 #include <peripheral/uart.h>
 #include <peripheral/timer.h>
@@ -40,10 +40,12 @@
 // UART Driver Enable
 #define UART_DE                 LATFbits.LATF12 // Driver enable bit of the UART2
 
-#define SERIAL_HEADER           2   // Dest, source
+#define SERIAL_HEADER           1   // Destination
 #define SERIAL_CSUM             1
 
-#define SERIAL_ADDRESS          1   // Own Address
+#define SERIAL_ADDRESS          1   // My Address
+
+#define SERIAL_BUF_SIZE         (SERIAL_HEADER+16384+SERIAL_CSUM)
 
 void write_PORTE (uint8_t value)
 {
@@ -57,14 +59,14 @@ uint8_t read_PORTE (void)
     return (LATE & 0xFF);
 }
 
-void hook(enum sllp_operation op, struct sllp_var **list)
+void hook(enum bsmp_operation op, struct bsmp_var **list)
 {
     switch(op)
     {
-    case SLLP_OP_READ:
+    case BSMP_OP_READ:
         list[0]->data[0] = read_PORTE();
         break;
-    case SLLP_OP_WRITE:
+    case BSMP_OP_WRITE:
         write_PORTE(list[0]->data[0]);
         break;
     }
@@ -72,7 +74,7 @@ void hook(enum sllp_operation op, struct sllp_var **list)
 
 struct serial_buffer
 {
-    uint8_t data[SERIAL_HEADER+SLLP_MAX_MESSAGE+SERIAL_CSUM];
+    uint8_t data[SERIAL_BUF_SIZE];
     uint16_t index;
     uint8_t csum;
 };
@@ -80,12 +82,12 @@ struct serial_buffer
 struct serial_buffer recv_buffer = {.index = 0};
 struct serial_buffer send_buffer = {.index = 0};
 
-struct sllp_raw_packet recv_packet =
+struct bsmp_raw_packet recv_packet =
                              { .data = recv_buffer.data + SERIAL_HEADER };
-struct sllp_raw_packet send_packet =
+struct bsmp_raw_packet send_packet =
                              { .data = send_buffer.data + SERIAL_HEADER };
 
-sllp_server_t *sllp = NULL;
+bsmp_server_t *bsmp = NULL;
 
 void __ISR(_UART_2_VECTOR, IPL6SRS) serial_byte_received (void)
 {
@@ -98,7 +100,7 @@ void __ISR(_UART_2_VECTOR, IPL6SRS) serial_byte_received (void)
 
     T2CONCLR = _T2CON_ON_MASK;  // Turn TIMER2 off
 
-    while (UARTReceivedDataIsAvailable(UART2))
+    while (UARTReceivedDataIsAvailable(UART2) && recv_buffer.index < SERIAL_BUF_SIZE)
     {
         recv_buffer.data[recv_buffer.index++] = UARTGetDataByte(UART2);
         recv_buffer.csum += recv_buffer.data[recv_buffer.index++];
@@ -134,7 +136,7 @@ void __ISR(_TIMER_2_VECTOR, IPL5SOFT) serial_packet_received (void)
     recv_packet.len = recv_buffer.index - SERIAL_HEADER - SERIAL_CSUM;
 
     // Library will process the packet
-    sllp_process_packet(sllp, &recv_packet, &send_packet);
+    bsmp_process_packet(bsmp, &recv_packet, &send_packet);
 
     // Prepare answer
     send_buffer.data[0] = source;
@@ -168,16 +170,16 @@ exit:
 int main(void)
 {
     // Initialize communications library
-    sllp = sllp_server_new();
-    sllp_register_hook(sllp, hook);
+    bsmp = bsmp_server_new();
+    bsmp_register_hook(bsmp, hook);
 
     // Register PORTE as a writable var
     uint8_t porte_data[1];
-    struct sllp_var porte_var;
+    struct bsmp_var porte_var;
     porte_var.info.size = 1;             // 1 byte
     porte_var.info.writable = true;      // Writable var
     porte_var.data = porte_data;         // Data associated with PORTE variable
-    sllp_register_variable(sllp, &porte_var);   // Register variable in library
+    bsmp_register_variable(bsmp, &porte_var);   // Register variable in library
 
     // Initialize serial port
     UARTConfigure(UART2, UART_ENABLE_HIGH_SPEED);

@@ -1,10 +1,22 @@
 /*
- * Sirius Low Level Protocol Library - libsllp
+ * Basic Small Messages Protocol - libbsmp
  * Server example
  *
  *
- * This is a fully documented libsllp server example. This is a good place to
+ * This is a fully documented libbsmp server example. This is a good place to
  * see the API in action.
+ */
+
+/*
+ * This server will contain a number of Entities:
+ *   - 4 Variables: One for the server 'name', two representing two fake A/D
+ *                  converters and one representing a fake 8-bit digital output.
+ *
+ *   - 2 Curves:    One little Curve (1 KiB total) and one big curve (2 MiB).
+ *
+ *   - 3 Functions: One that fakely starts the conversion of the fake A/D's
+ *                  One that randomize a block of the big curve.
+ *                  One that prints a random quote.
  */
 
 /* Some boilerplate */
@@ -19,34 +31,34 @@
 
 #define TRY(name, func)\
     do {\
-        enum sllp_err err = func;\
+        enum bsmp_err err = func;\
         if(err) {\
-            fprintf(stderr, S name": %s\n", sllp_error_str(err));\
+            fprintf(stderr, S name": %s\n", bsmp_error_str(err));\
             return -1;\
         }\
     }while(0)
 
 /*
  * The very first thing to do is to include the server library definitions. This
- * is done with this directive. Nothing else SLLP-related is needed.
+ * is done with this directive. Nothing else BSMP-related is needed.
  */
-#include <sllp_server.h>
+#include <bsmp/server.h>
 
 
 /*
  * It is possible to instantiate many servers. This example instantiates only
  * one. It is stored on a 'global' variable, restricted to this file (hence
- * static). Note that the sllp_server_t type is opaque. You should never try to
+ * static). Note that the bsmp_server_t type is opaque. You should never try to
  * manipulate its internal fields.
  *
  * An instance must be passed to almost every Server API call.
  */
 
-static sllp_server_t *server = NULL;
+static bsmp_server_t *server = NULL;
 
 
 /*
-* Once we have an instance, we can populate it with Entities. The SLLP defines
+* Once we have an instance, we can populate it with Entities. The BSMP defines
 * four kinds of entities: Variables, Groups, Curves and Functions. Groups are
 * handled automatically by the library, and currently cannot be created by the
 * server. The only mandatory Entities, the three standard Groups, are created
@@ -70,20 +82,22 @@ static sllp_server_t *server = NULL;
  */
 
 static uint8_t name_memory[64] = "MIGHTY SERVER"; // Memory block for 'name'
-static struct sllp_var name = {
+static struct bsmp_var name = {
    .data = name_memory,                 // Point to the memory block
    .info.size = sizeof(name_memory),    // Store the size of the memory block
    .info.writable = false,              // Can the client write?
-   .user = (void*) "NAME"               // An internal identifier
+   .value_ok = NULL,                    // No checking function
+   .user = (void*) "SERVER_NAME"        // An internal identifier
 };
 
 static uint8_t ad_memory[2][2];
-static struct sllp_var ad[2] =
+static struct bsmp_var ad[2] =
 {
     [0] = {
         .data = ad_memory[0],
         .info.size = sizeof(ad_memory[0]),
         .info.writable = false,
+        .value_ok = NULL,
         .user = (void*) "AD1"
     },
 
@@ -91,26 +105,42 @@ static struct sllp_var ad[2] =
         .data = ad_memory[1],
         .info.size = sizeof(ad_memory[1]),
         .info.writable = false,
+        .value_ok = NULL,
         .user = (void*) "AD2"
     },
 };
 
+/*
+ * This function checks if a value being written to the digital output variable
+ * is valid. We will only allow values greater than 1 and less than 255.
+ */
+static bool check_digital_output (struct bsmp_var *var, uint8_t *new_value)
+{
+    (void)var;              // We don't need it in this particular function
+    if(new_value[0] > 1 && new_value[0] < 255)
+        return true;        // Inside allowed range: OK
+    printf(S"Tried to write INVALID value (%d) to DIGITAL OUTPUT\n",
+               new_value[0]);
+    return false;           // Outside allowed range: nuh-uh
+}
+
 static uint8_t digital_output_memory[1];
-static struct sllp_var digital_output =
+static struct bsmp_var digital_output =
 {
     .data = digital_output_memory,
     .info.size = sizeof(digital_output_memory),
     .info.writable = true,
+    .value_ok = check_digital_output,
     .user = (void*) "DIGITAL"
 };
 
 /*
  * Ok, now that we have a bunch of Variables, let's declare some Curves. A Curve
  * is like a very very big Variable. It is a collection of blocks. Each Curve
- * can have at most 65536 blocks of data. Each block has 16384 bytes. Therefore,
- * a single Curve can hold up to 1GB of data. If you need more than that, you
- * can use up to 128 Curves (128 GB of data), which should be enough for
- * everyone.
+ * can have at most 65536 blocks of data. Each block at most 65520 bytes.
+ * Therefore, a single Curve can hold up to 4095 MiB of data. (1 MiB short of 4
+ * GiB). If you need more than that, you can use up to 128 Curves (almost 512
+ * GiB of data), which 'should be enough for everyone'.
  *
  * (If you really need to represent more than 128 Curves, you can create more
  * server instances. However, keep in mind that this protocol was not designed
@@ -121,22 +151,25 @@ static struct sllp_var digital_output =
  * structure. If C was a nicer language, we could use lambdas and keep the code
  * clean and beautiful. It isn't, however, so we make do with what we have.
  *
- * We will create two Curves: one little, with 2 blocks (2*16384 bytes) and one
- * big, with 256 blocks (256*16384 bytes).
+ * We will create two Curves: a little Curve, with 2 512-byte blocks (2*512
+ * bytes) and a bigger one, with 64 32 KiB blocks (64*32768 bytes).
  */
 
 /*
  * First, let's declare the memory blocks to be used by these Curves.
  */
-static uint8_t little_curve_memory[2*SLLP_CURVE_BLOCK_SIZE];
-static uint8_t big_curve_memory[256*SLLP_CURVE_BLOCK_SIZE];
+static uint8_t little_curve_memory[2*512];
+static uint8_t big_curve_memory[64*32768];
 
 /*
  * Every Curve must have two auxiliary functions: read_block and write_block.
- * Here we define those two functions to operate on both our curves
+ * Here we define those two functions to operate on both our curves. Keep in
+ * mind that reading a Curve can return less bytes than specified in the block
+ * size. Likewise, it is possible to write less than curve->info.block_size
+ * bytes to a block.
  */
-static void curve_read_block (struct sllp_curve *curve, uint16_t block,
-                              uint8_t *data)
+static void curve_read_block (struct bsmp_curve *curve, uint16_t block,
+                              uint8_t *data, uint16_t *len)
 {
     /* Let's check which curve we have so we can point to the right block. */
 
@@ -151,10 +184,12 @@ static void curve_read_block (struct sllp_curve *curve, uint16_t block,
      */
 
     uint8_t *block_data;
+    uint16_t block_size = curve->info.block_size;
+
     if(!strcmp((char*)curve->user, "MY PRETTY LITTLE CURVE"))
-        block_data = &little_curve_memory[block*SLLP_CURVE_BLOCK_SIZE];
+        block_data = &little_curve_memory[block*block_size];
     else if(!strcmp((char*)curve->user, "MY AWESOME BIG CURVE"))
-        block_data = &big_curve_memory[block*SLLP_CURVE_BLOCK_SIZE];
+        block_data = &big_curve_memory[block*block_size];
     else
     {
         fprintf(stderr,S"That's weird. I've got an unexpected Curve to read\n");
@@ -162,46 +197,55 @@ static void curve_read_block (struct sllp_curve *curve, uint16_t block,
     }
 
     /* Now we need to copy the block requested into the 'data' pointer. */
-    memcpy(data, block_data, SLLP_CURVE_BLOCK_SIZE);
+    memcpy(data, block_data, block_size);
+
+    /* We copied the whole requested block */
+    *len = block_size;
 }
 
-static void curve_write_block (struct sllp_curve *curve, uint16_t block,
-                               uint8_t *data)
+static void curve_write_block (struct bsmp_curve *curve, uint16_t block,
+                               uint8_t *data, uint16_t len)
 {
     /*
      * Same logic used in curve_read_block. Note that this function will only
-     * be called for the little Curve, because the big Curve is read-only.
+     * be called for the little Curve, because the big Curve is read-only. Note
+     * that len is not checked. The library checks its validity, but once again,
+     * if you are completely paranoid and want to check yourself, feel free to
+     * do so.
      */
     uint8_t *block_data;
+
     if(!strcmp((char*)curve->user, "MY PRETTY LITTLE CURVE"))
-        block_data = &little_curve_memory[block*SLLP_CURVE_BLOCK_SIZE];
+        block_data = &little_curve_memory[block*len];
     else
     {
         fprintf(stderr,S"This is not the Curve I'm looking for.\n");
         return;
     }
 
-    /* Now we need to copy the 'data' pointer into the requested block. */
-    memcpy(block_data, data, SLLP_CURVE_BLOCK_SIZE);
+    /* Now copy the 'data' pointer into the requested block. */
+    memcpy(block_data, data, len);
 }
 
 /* Let's declare those Curves already! */
-static struct sllp_curve little_curve = {
-    .info.nblocks = 2,      // 2 blocks
-    .info.writable = true,  // The client can write on this Curve.
+static struct bsmp_curve little_curve = {
+    .info.nblocks = 2,                  // 2 blocks
+    .info.block_size = 512,             // 512 bytes per block
+    .info.writable = true,              // The client can write to this Curve.
     .read_block = curve_read_block,
     .write_block = curve_write_block,
     .user = (void*) "MY PRETTY LITTLE CURVE"
 };
 
-static struct sllp_curve big_curve = {
-    .info.nblocks = 256,                // 256 blocks
+static struct bsmp_curve big_curve = {
+    .info.nblocks = 64,                 // 64 blocks
+    .info.block_size = 32768,           // 32768 bytes per block
     .info.writable = false,             // Read-only
     .read_block = curve_read_block,
     .user = (void*) "MY AWESOME BIG CURVE"
 };
 
-/* It's nice to have those Curves. What about some Functions? I mean, SLLP's
+/* It's nice to have those Curves. What about some Functions? I mean, BSMP's
  * Functions. You can think of them as RPC, Remote Procedure Calls. They can
  * do whatever you like. Let's define three of them: one that "starts the
  * conversion" of our fake A/D converters; one that write random values to a
@@ -227,7 +271,7 @@ static uint8_t ad_convert(uint8_t *input, uint8_t *output)
     return 0; // Success!!
 }
 
-static struct sllp_func ad_convert_func = {
+static struct bsmp_func ad_convert_func = {
     .func_p = ad_convert,
     .info.input_size = 0,       // Nothing is read from the input parameter
     .info.output_size = 0,      // Nothing is written to the output parameter
@@ -244,13 +288,13 @@ static uint8_t rand_block(uint8_t *input, uint8_t *output)
         return 1;                       // 1 means INVALID BLOCK
 
     unsigned int i;
-    for(i = 0; i < SLLP_CURVE_BLOCK_SIZE; ++i)
-        big_curve_memory[block*SLLP_CURVE_BLOCK_SIZE + i] = rand() % 256;
+    for(i = 0; i < big_curve.info.block_size; ++i)
+        big_curve_memory[block*big_curve.info.block_size + i] = rand() % 256;
 
     return 0;                           // 0 is SUCCESS!!!
 }
 
-static struct sllp_func rand_block_func = {
+static struct bsmp_func rand_block_func = {
     .func_p = rand_block,
     .info.input_size = 2,       // It takes 2 bytes to identify the block
     .info.output_size = 0,      // Nothing is written to the output parameter
@@ -278,7 +322,7 @@ static uint8_t quote (uint8_t *input, uint8_t *output)
     return 0;   // SUCCESS!!!
 }
 
-static struct sllp_func quote_func = {
+static struct bsmp_func quote_func = {
     .func_p = quote,
     .info.input_size = 0,
     .info.output_size = 0,
@@ -292,10 +336,10 @@ static struct sllp_func quote_func = {
  * right AFTER a WRITE command is performed. Our hook here won't do much, just
  * print what is happening.
  */
-static void hook (enum sllp_operation op, struct sllp_var **list)
+static void hook (enum bsmp_operation op, struct bsmp_var **list)
 {
     fprintf(stdout, S"Request to %s the Variables: ",
-            op == SLLP_OP_READ ? "READ from" : "WRITE to");
+            op == BSMP_OP_READ ? "READ from" : "WRITE to");
 
     while(*list)
     {
@@ -320,39 +364,39 @@ int server_init (void)
      * This call malloc's a new server instance. If it returns NULL, the
      * allocation failed. Probably there's not enough memory.
      */
-    server = sllp_server_new();
+    server = bsmp_server_new();
 
     if(!server)
     {
-        fprintf(stderr, S"Couldn't allocate a SLLP Server instance\n");
+        fprintf(stderr, S"Couldn't allocate a BSMP Server instance\n");
         return -1;
     }
 
     /*
      * Register the hook
      */
-    TRY("reg_hook", sllp_register_hook(server, hook));
+    TRY("reg_hook", bsmp_register_hook(server, hook));
 
     /*
      * Register all Variables
      */
-    TRY("reg_var", sllp_register_variable(server, &name));              // ID 0
-    TRY("reg_var", sllp_register_variable(server, &ad[0]));             // ID 1
-    TRY("reg_var", sllp_register_variable(server, &ad[1]));             // ID 2
-    TRY("reg_var", sllp_register_variable(server, &digital_output));    // ID 3
+    TRY("reg_var", bsmp_register_variable(server, &name));              // ID 0
+    TRY("reg_var", bsmp_register_variable(server, &ad[0]));             // ID 1
+    TRY("reg_var", bsmp_register_variable(server, &ad[1]));             // ID 2
+    TRY("reg_var", bsmp_register_variable(server, &digital_output));    // ID 3
 
     /*
      * Register all Curves
      */
-    TRY("reg_curve", sllp_register_curve(server, &little_curve));       // ID 0
-    TRY("reg_curve", sllp_register_curve(server, &big_curve));          // ID 1
+    TRY("reg_curve", bsmp_register_curve(server, &little_curve));       // ID 0
+    TRY("reg_curve", bsmp_register_curve(server, &big_curve));          // ID 1
 
     /*
      * Register all Functions
      */
-    TRY("reg_func", sllp_register_function(server, &ad_convert_func));  // ID 0
-    TRY("reg_func", sllp_register_function(server, &rand_block_func));  // ID 1
-    TRY("reg_func", sllp_register_function(server, &quote_func));       // ID 2
+    TRY("reg_func", bsmp_register_function(server, &ad_convert_func));  // ID 0
+    TRY("reg_func", bsmp_register_function(server, &rand_block_func));  // ID 1
+    TRY("reg_func", bsmp_register_function(server, &quote_func));       // ID 2
 
     /*
      * Great! Now our server is up and ready to receive some commands.
@@ -364,15 +408,15 @@ int server_init (void)
 
 /*
  * A useful server isn't isolated from the world. Instead it must able to
- * receive messages, do something about them and then return a nice answer
- * saying that everything is OK.
+ * receive messages, do something about them and then return a nice and
+ * comforting answer saying that everything is OK.
  *
  * We will abstract the communication away because this is a simple example.
  * Here the communication will be consisted of receiving some bytes, arranging
  * them nicely and then returning other bunch of bytes. Those bytes can be
  * transmitted via any media: Ethernet, TCP/IP, Serial lines, telephone lines,
  * smoke signals... As long as you convert those pesky bytes to a struct
- * sllp_raw_packet and pass it to the server, it will work.
+ * bsmp_raw_packet and pass it to the server, it will work.
  */
 int server_process_message(uint8_t *recv_data, unsigned int recv_len,
                            uint8_t *send_data, unsigned int *send_len)
@@ -380,7 +424,7 @@ int server_process_message(uint8_t *recv_data, unsigned int recv_len,
     if(!recv_data || !send_data || !send_len)
         return -1;
 
-    struct sllp_raw_packet recv_packet, send_packet;
+    struct bsmp_raw_packet recv_packet, send_packet;
 
     recv_packet.data = recv_data;
     recv_packet.len = recv_len;
@@ -390,7 +434,7 @@ int server_process_message(uint8_t *recv_data, unsigned int recv_len,
      * The next function will read directly from recv_packet.data and write the
      * result directly to send_packet.data
      */
-    if(sllp_process_packet(server, &recv_packet, &send_packet))
+    if(bsmp_process_packet(server, &recv_packet, &send_packet))
         return -1;
 
     *send_len = send_packet.len;

@@ -7,19 +7,11 @@
       <logicalFolder name="f1" displayName="md5" projectFiles="true">
         <itemPath>../../../../src/md5/md5.h</itemPath>
       </logicalFolder>
-      <itemPath>../../../../src/sllp.h</itemPath>
-      <itemPath>../../../../src/sllp_client.h</itemPath>
-      <itemPath>../../../../src/sllp_server.h</itemPath>
-      <itemPath>../../../../src/curve.h</itemPath>
-      <itemPath>../../../../src/defs.h</itemPath>
-      <itemPath>../../../../src/func.h</itemPath>
-      <itemPath>../../../../src/group.h</itemPath>
-      <itemPath>../../../../src/server_defs.h</itemPath>
-      <itemPath>../../../../src/sllp_curve.h</itemPath>
-      <itemPath>../../../../src/sllp_func.h</itemPath>
-      <itemPath>../../../../src/sllp_group.h</itemPath>
-      <itemPath>../../../../src/sllp_var.h</itemPath>
-      <itemPath>../../../../src/var.h</itemPath>
+      <itemPath>../../../../src/client.h</itemPath>
+      <itemPath>../../../../src/server.h</itemPath>
+      <itemPath>../../../../src/server_priv.h</itemPath>
+      <itemPath>../../../../src/bsmp.h</itemPath>
+      <itemPath>../../../../src/bsmp_priv.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -31,13 +23,10 @@
       <logicalFolder name="f1" displayName="md5" projectFiles="true">
         <itemPath>../../../../src/md5/md5.c</itemPath>
       </logicalFolder>
-      <itemPath>../../../../src/sllp.c</itemPath>
-      <itemPath>../../../../src/sllp_client.c</itemPath>
-      <itemPath>../../../../src/sllp_server.c</itemPath>
-      <itemPath>../../../../src/curve.c</itemPath>
-      <itemPath>../../../../src/func.c</itemPath>
-      <itemPath>../../../../src/group.c</itemPath>
-      <itemPath>../../../../src/var.c</itemPath>
+      <itemPath>../../../../src/client.c</itemPath>
+      <itemPath>../../../../src/server.c</itemPath>
+      <itemPath>../../../../src/server_priv.c</itemPath>
+      <itemPath>../../../../src/bsmp.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -85,7 +74,7 @@
         <property key="generate-16-bit-code" value="false"/>
         <property key="isolate-each-function" value="false"/>
         <property key="make-warnings-into-errors" value="false"/>
-        <property key="optimization-level" value=""/>
+        <property key="optimization-level" value="-O3"/>
         <property key="place-data-into-section" value="false"/>
         <property key="post-instruction-scheduling" value="default"/>
         <property key="pre-instruction-scheduling" value="default"/>
@@ -93,6 +82,7 @@
         <property key="strict-ansi" value="false"/>
         <property key="support-ansi" value="false"/>
         <property key="use-cci" value="false"/>
+        <property key="use-iar" value="false"/>
         <property key="use-indirect-calls" value="false"/>
       </C32>
       <C32-AS>
@@ -126,6 +116,7 @@
         <property key="linker-symbols" value=""/>
         <property key="map-file" value=""/>
         <property key="no-startup-files" value="false"/>
+        <property key="oXC32ld-extra-opts" value=""/>
         <property key="optimization-level" value=""/>
         <property key="preprocessor-macros" value=""/>
         <property key="remove-unused-sections" value="false"/>
@@ -157,12 +148,79 @@
         <property key="rtti" value="true"/>
         <property key="strict-ansi" value="false"/>
         <property key="use-cci" value="false"/>
+        <property key="use-iar" value="false"/>
         <property key="use-indirect-calls" value="false"/>
       </C32CPP>
       <C32Global>
         <property key="legacy-libc" value="false"/>
+        <property key="save-temps" value="false"/>
+        <property key="wpo-lto" value="false"/>
       </C32Global>
       <ICD3PlatformTool>
+        <property key="ADC 1" value="true"/>
+        <property key="AutoSelectMemRanges" value="auto"/>
+        <property key="CAN1" value="true"/>
+        <property key="CAN2" value="true"/>
+        <property key="CHANGE NOTICE" value="true"/>
+        <property key="COMPARATOR" value="true"/>
+        <property key="DMA" value="true"/>
+        <property key="ETHERNET CONTROLLER" value="true"/>
+        <property key="Freeze All Other Peripherals" value="true"/>
+        <property key="I2C1" value="true"/>
+        <property key="I2C2" value="true"/>
+        <property key="I2C3" value="true"/>
+        <property key="I2C4" value="true"/>
+        <property key="I2C5" value="true"/>
+        <property key="INPUT CAPTURE 1" value="true"/>
+        <property key="INPUT CAPTURE 2" value="true"/>
+        <property key="INPUT CAPTURE 3" value="true"/>
+        <property key="INPUT CAPTURE 4" value="true"/>
+        <property key="INPUT CAPTURE 5" value="true"/>
+        <property key="INTERRUPT CONTROL" value="true"/>
+        <property key="OUTPUT COMPARE 1" value="true"/>
+        <property key="OUTPUT COMPARE 2" value="true"/>
+        <property key="OUTPUT COMPARE 3" value="true"/>
+        <property key="OUTPUT COMPARE 4" value="true"/>
+        <property key="OUTPUT COMPARE 5" value="true"/>
+        <property key="PARALLEL MASTER/SLAVE PORT" value="true"/>
+        <property key="REAL TIME CLOCK" value="true"/>
+        <property key="SecureSegment.SegmentProgramming" value="FullChipProgramming"/>
+        <property key="TIMER1" value="true"/>
+        <property key="TIMER2" value="true"/>
+        <property key="TIMER3" value="true"/>
+        <property key="TIMER4" value="true"/>
+        <property key="TIMER5" value="true"/>
+        <property key="ToolFirmwareFilePath"
+                  value="Press to browse for a specific firmware version"/>
+        <property key="ToolFirmwareOption.UseLatestFirmware" value="true"/>
+        <property key="UART1" value="true"/>
+        <property key="UART2" value="true"/>
+        <property key="UART3" value="true"/>
+        <property key="UART4" value="true"/>
+        <property key="UART5" value="true"/>
+        <property key="UART6" value="true"/>
+        <property key="debugoptions.useswbreakpoints" value="false"/>
+        <property key="hwtoolclock.frcindebug" value="false"/>
+        <property key="memories.aux" value="false"/>
+        <property key="memories.bootflash" value="false"/>
+        <property key="memories.configurationmemory" value="true"/>
+        <property key="memories.eeprom" value="true"/>
+        <property key="memories.flashdata" value="true"/>
+        <property key="memories.id" value="true"/>
+        <property key="memories.programmemory" value="true"/>
+        <property key="memories.programmemory.end" value="0x1d07ffff"/>
+        <property key="memories.programmemory.start" value="0x1d000000"/>
+        <property key="poweroptions.powerenable" value="false"/>
+        <property key="programoptions.eraseb4program" value="true"/>
+        <property key="programoptions.preserveeeprom" value="false"/>
+        <property key="programoptions.preserveprogramrange" value="false"/>
+        <property key="programoptions.preserveprogramrange.end" value="0x1d07ffff"/>
+        <property key="programoptions.preserveprogramrange.start" value="0x1d000000"/>
+        <property key="programoptions.preserveuserid" value="false"/>
+        <property key="programoptions.testmodeentrymethod" value="VPPFirst"/>
+        <property key="programoptions.usehighvoltageonmclr" value="false"/>
+        <property key="programoptions.uselvpprogramming" value="false"/>
+        <property key="voltagevalue" value="3.25"/>
       </ICD3PlatformTool>
     </conf>
   </confs>
