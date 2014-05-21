@@ -54,7 +54,7 @@
  * An instance must be passed to almost every Server API call.
  */
 
-static bsmp_server_t *server = NULL;
+static bsmp_server_t server;
 
 
 /*
@@ -361,42 +361,35 @@ int server_init (void)
     srand(time(NULL));
 
     /*
-     * This call malloc's a new server instance. If it returns NULL, the
-     * allocation failed. Probably there's not enough memory.
+     * Initialize our instance
      */
-    server = bsmp_server_new();
-
-    if(!server)
-    {
-        fprintf(stderr, S"Couldn't allocate a BSMP Server instance\n");
-        return -1;
-    }
+    TRY("init", bsmp_server_init(&server));
 
     /*
      * Register the hook
      */
-    TRY("reg_hook", bsmp_register_hook(server, hook));
+    TRY("reg_hook", bsmp_register_hook(&server, hook));
 
     /*
      * Register all Variables
      */
-    TRY("reg_var", bsmp_register_variable(server, &name));              // ID 0
-    TRY("reg_var", bsmp_register_variable(server, &ad[0]));             // ID 1
-    TRY("reg_var", bsmp_register_variable(server, &ad[1]));             // ID 2
-    TRY("reg_var", bsmp_register_variable(server, &digital_output));    // ID 3
+    TRY("reg_var", bsmp_register_variable(&server, &name));              // ID 0
+    TRY("reg_var", bsmp_register_variable(&server, &ad[0]));             // ID 1
+    TRY("reg_var", bsmp_register_variable(&server, &ad[1]));             // ID 2
+    TRY("reg_var", bsmp_register_variable(&server, &digital_output));    // ID 3
 
     /*
      * Register all Curves
      */
-    TRY("reg_curve", bsmp_register_curve(server, &little_curve));       // ID 0
-    TRY("reg_curve", bsmp_register_curve(server, &big_curve));          // ID 1
+    TRY("reg_curve", bsmp_register_curve(&server, &little_curve));       // ID 0
+    TRY("reg_curve", bsmp_register_curve(&server, &big_curve));          // ID 1
 
     /*
      * Register all Functions
      */
-    TRY("reg_func", bsmp_register_function(server, &ad_convert_func));  // ID 0
-    TRY("reg_func", bsmp_register_function(server, &rand_block_func));  // ID 1
-    TRY("reg_func", bsmp_register_function(server, &quote_func));       // ID 2
+    TRY("reg_func", bsmp_register_function(&server, &ad_convert_func));  // ID 0
+    TRY("reg_func", bsmp_register_function(&server, &rand_block_func));  // ID 1
+    TRY("reg_func", bsmp_register_function(&server, &quote_func));       // ID 2
 
     /*
      * Great! Now our server is up and ready to receive some commands.
@@ -434,7 +427,7 @@ int server_process_message(uint8_t *recv_data, unsigned int recv_len,
      * The next function will read directly from recv_packet.data and write the
      * result directly to send_packet.data
      */
-    if(bsmp_process_packet(server, &recv_packet, &send_packet))
+    if(bsmp_process_packet(&server, &recv_packet, &send_packet))
         return -1;
 
     *send_len = send_packet.len;

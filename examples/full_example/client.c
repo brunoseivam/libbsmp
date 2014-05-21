@@ -140,23 +140,16 @@ int main(void)
     /*
      * Okay, let's begin our journey of creating and using a client of the BSMP.
      *
-     * Firstly you shall create an instance for the client. The instance is
-     * malloc'ed and returned. You have to pass your communications functions.
+     * Firstly you shall create an instance for the client.
      */
-    bsmp_client_t *client = bsmp_client_new(client_send, client_recv);
-
-    if(!client)
-    {
-        fprintf(stderr, C"Couldn't allocate client instance.\n");
-        return -1;
-    }
+    bsmp_client_t client;
 
     /*
      * Initialize our client. Initialization does a lot of communications with
      * the server, so bear in mind that your communications should be ready to
      * be used before the call to this function.
      */
-    TRY("init", bsmp_client_init(client));
+    TRY("init", bsmp_client_init(&client, client_send, client_recv));
 
     /*
      * If we got past the last line, we now have a new shiny client, waiting to
@@ -167,7 +160,7 @@ int main(void)
      * We can, for starters, get a list of all the Variables in the server:
      */
     struct bsmp_var_info_list *vars;
-    TRY("vars_list", bsmp_get_vars_list(client, &vars));
+    TRY("vars_list", bsmp_get_vars_list(&client, &vars));
 
     printf(C"Server has %d Variable(s):\n", vars->count);
     for(i = 0; i < vars->count; ++i)
@@ -180,7 +173,7 @@ int main(void)
      * How about a list of groups?
      */
     struct bsmp_group_list *groups;
-    TRY("groups_list", bsmp_get_groups_list(client, &groups));
+    TRY("groups_list", bsmp_get_groups_list(&client, &groups));
 
     printf("\n"C"Server has %d Group(s):\n", groups->count);
     for(i = 0; i < groups->count; ++i)
@@ -200,7 +193,7 @@ int main(void)
      * Hmm cool! Easy! Now, Curves!
      */
     struct bsmp_curve_info_list *curves;
-    TRY("curves_list", bsmp_get_curves_list(client, &curves));
+    TRY("curves_list", bsmp_get_curves_list(&client, &curves));
 
     printf("\n"C"Server has %d Curve(s):\n", curves->count);
     for(i = 0; i < curves->count; ++i)
@@ -215,7 +208,7 @@ int main(void)
      * Functions.
      */
     struct bsmp_func_info_list *funcs;
-    TRY("funcs_list", bsmp_get_funcs_list(client, &funcs));
+    TRY("funcs_list", bsmp_get_funcs_list(&client, &funcs));
 
     printf("\n"C"Server has %d Functions(s):\n", funcs->count);
     for(i = 0; i < funcs->count; ++i)
@@ -238,7 +231,7 @@ int main(void)
     struct bsmp_var_info *var_name = &vars->list[0];
     uint8_t server_name[var_name->size];
 
-    TRY("read_server_name", bsmp_read_var(client, var_name, server_name));
+    TRY("read_server_name", bsmp_read_var(&client, var_name, server_name));
     printf(C"Server said his name was %s. Hello %s!\n", (char*) server_name,
             (char*) server_name);
 
@@ -251,7 +244,7 @@ int main(void)
     printf(C"Let's try to change the server name to '%s'...\n",
             (char*)new_server_name);
 
-    if(!bsmp_write_var(client, var_name, new_server_name))
+    if(!bsmp_write_var(&client, var_name, new_server_name))
         printf(C"  Yes! We changed the server name! This library is lame.\n\n");
     else
         printf(C"  Crap. The server refuses to change his name... If it "
@@ -280,7 +273,7 @@ int main(void)
 
     struct bsmp_var_info *var_dig_output = &vars->list[3];
     uint8_t dig_val[1] = {1};
-    TRY("invalid var value", !bsmp_write_var(client, var_dig_output, dig_val));
+    TRY("invalid var value", !bsmp_write_var(&client, var_dig_output, dig_val));
 
     printf(C"Oh noes! It DID!\n");
     /*
@@ -295,7 +288,7 @@ int main(void)
     printf("\n");
     struct bsmp_var_info *var_1st_ad = &vars->list[1];
     uint8_t ad_value[var_1st_ad->size];
-    TRY("read 1st ad", bsmp_read_var(client, var_1st_ad, ad_value));
+    TRY("read 1st ad", bsmp_read_var(&client, var_1st_ad, ad_value));
 
     /*
      * It's, of course, a bipolar A/D converter, from -10V to +10V. We need to
@@ -313,10 +306,10 @@ int main(void)
     struct bsmp_func_info *func_convert_ads = &funcs->list[0];
     printf(C"Server, start the conversions of the A/D converters. NOW!!!\n");
     uint8_t convert_ads_error;
-    TRY("convert ads", bsmp_func_execute(client, func_convert_ads,
+    TRY("convert ads", bsmp_func_execute(&client, func_convert_ads,
                                          &convert_ads_error, NULL, NULL));
 
-    TRY("reread 1st ad", bsmp_read_var(client, var_1st_ad, ad_value));
+    TRY("reread 1st ad", bsmp_read_var(&client, var_1st_ad, ad_value));
     printf(C"The 1st A/D converter is now 'reading' %.3f V! Nice!\n",
             convert_ad(ad_value));
 
@@ -328,7 +321,7 @@ int main(void)
      */
     printf("\n"C"Creating a group with both A/D converters in it\n");
     struct bsmp_var_info *all_ads[3] = {&vars->list[1], &vars->list[2], NULL};
-    TRY("create group", bsmp_create_group(client, all_ads));
+    TRY("create group", bsmp_create_group(&client, all_ads));
 
     /* The group created is the last one */
     struct bsmp_group *ads_group = &groups->list[groups->count-1];
@@ -339,7 +332,7 @@ int main(void)
 
     printf(C"Let's read this group. It contains our A/D's.\n");
 
-    TRY("read group", bsmp_read_group(client, ads_group, ads_values));
+    TRY("read group", bsmp_read_group(&client, ads_group, ads_values));
     printf(C"  1st A/D = %.3f V    2nd A/D = %.3f V\n",
             convert_ad(&ads_values[0]), convert_ad(&ads_values[1]));
 
@@ -350,7 +343,7 @@ int main(void)
      * of all of them! MUAHAHAHAHA!
      */
     printf("\n"C"Ok, enough of groups. I'll remove them all!\n");
-    TRY("remove groups", bsmp_remove_all_groups(client));
+    TRY("remove groups", bsmp_remove_all_groups(&client));
     printf(C"Done. Now the sever has... What? %d groups??\n", groups->count);
     printf(C"Oh yeah, of course, there are 3 irremovable standard groups...\n");
 
@@ -381,7 +374,7 @@ int main(void)
 
     printf("\n"C"Let's try to toggle the most significant bit of the digital "
            "output\n");
-    TRY("toggle bit", bsmp_bin_op_var(client, BIN_OP_TOGGLE, var_dig_output,
+    TRY("toggle bit", bsmp_bin_op_var(&client, BIN_OP_TOGGLE, var_dig_output,
                                       toggle_mask));
     /*
      * Missile launched!!
@@ -417,7 +410,7 @@ int main(void)
      * Send the pattern to all blocks, one at a time!
      */
     for(i = 0; i < little_curve->nblocks; ++i)
-        TRY("send curve block", bsmp_send_curve_block(client, little_curve, i,
+        TRY("send curve block", bsmp_send_curve_block(&client, little_curve, i,
                                 pattern_block, little_curve->block_size));
 
     /*
@@ -430,7 +423,7 @@ int main(void)
 
     uint8_t pattern_read_back[little_curve->block_size];
     uint16_t pattern_read_bytes;
-    TRY("request curve block", bsmp_request_curve_block(client, little_curve, 0,
+    TRY("request curve block", bsmp_request_curve_block(&client, little_curve, 0,
                                pattern_read_back, &pattern_read_bytes));
 
     printf(C"Got %d bytes for 1st block. The 15 first bytes are:\n"C"   ",
@@ -455,7 +448,7 @@ int main(void)
     printf(C"  Data malloc'ed at %p\n", big_curve_data);
 
 
-    TRY("read curve", bsmp_read_curve (client, big_curve, big_curve_data,
+    TRY("read curve", bsmp_read_curve (&client, big_curve, big_curve_data,
                                        &big_curve_data_len));
     printf(C"  Curve read!!\n");
 

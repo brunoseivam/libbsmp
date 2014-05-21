@@ -3,39 +3,28 @@
 
 #include "bsmp.h"
 
-// Types
+#define BSMP_MAGIC 0x66837780 // ASCII codes for BSMP
 
-// Handle to a client instance
-typedef struct bsmp_client bsmp_client_t;
+// Types
 
 // Communication function (send or receive data). Must return 0 if successful
 // and anything but 0 otherwise.
 typedef int (*bsmp_comm_func_t) (uint8_t* data, uint32_t *count);
 
-/**
- * Allocate a new BSMP Client instance, returning a handle to it. This instance
- * should be deallocated with bsmp_client_destroy after its use.
- *
- * @param send_func [input] Function used to send a message
- * @param recv_func [input] Function used to receive a message
- *
- * @return A handle to an instance of the BSMP Client lib or NULL if there
- *         wasn't enough memory to do the allocation.
- */
-bsmp_client_t *bsmp_client_new (bsmp_comm_func_t send_func,
-                                bsmp_comm_func_t recv_func);
+// BSMP Client instance
+struct bsmp_client
+{
+    uint32_t                    magic;
+    bsmp_comm_func_t            send, recv;
+    struct bsmp_version         server_version;
+    struct bsmp_var_info_list   vars;
+    struct bsmp_group_list      groups;
+    struct bsmp_curve_info_list curves;
+    struct bsmp_func_info_list  funcs;
+};
 
-/**
- * Deallocate a BSMP Client instance
- * 
- * @param client [input] A BSMP Client Library instance to be deallocated.
- * 
- * @return BSMP_SUCCESS or one of the following errors:
- * <ul>
- *   <li>BSMP_ERR_PARAM_INVALID: client is a NULL pointer. </li>
- * </ul>
- */
-enum bsmp_err bsmp_client_destroy (bsmp_client_t *client);
+// Handle to a client instance
+typedef struct bsmp_client bsmp_client_t;
 
 /*
  * Initializes an instance of the BSMP Client Library. Initialization means
@@ -49,6 +38,8 @@ enum bsmp_err bsmp_client_destroy (bsmp_client_t *client);
  * invocation.
  *
  * @param client [input] Handle to the instance to be initialized
+ * @param send_func [input] Function used to send a message
+ * @param recv_func [input] Function used to receive a message
  *
  * @return BSMP_SUCCESS or one of the following errors:
  * <ul>
@@ -61,7 +52,9 @@ enum bsmp_err bsmp_client_destroy (bsmp_client_t *client);
  * </ul>
  *
  */
-enum bsmp_err bsmp_client_init(bsmp_client_t *client);
+enum bsmp_err bsmp_client_init(bsmp_client_t *client,
+                               bsmp_comm_func_t send_func,
+                               bsmp_comm_func_t recv_func);
 
 /*
  * Returns a pointer to a struct describing the server version of the protocol.

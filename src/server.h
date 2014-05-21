@@ -5,9 +5,6 @@
 
 // Types
 
-// Handle to a server instance
-typedef struct bsmp_server bsmp_server_t;
-
 // Hook function. Called before the values of a set of variables are read and
 // after values of a set of variables are written.
 enum bsmp_operation
@@ -15,8 +12,22 @@ enum bsmp_operation
     BSMP_OP_READ,                   // Read command arrived
     BSMP_OP_WRITE,                  // Write command arrived
 };
-
 typedef void (*bsmp_hook_t) (enum bsmp_operation op, struct bsmp_var **list);
+
+// BSMP instance
+struct bsmp_server
+{
+    struct bsmp_var_ptr_list    vars;
+    struct bsmp_group_list      groups;
+    struct bsmp_curve_ptr_list  curves;
+    struct bsmp_func_ptr_list   funcs;
+
+    struct bsmp_var             *modified_list[BSMP_MAX_VARIABLES+1];
+    bsmp_hook_t                 hook;
+};
+
+// Handle to a server instance
+typedef struct bsmp_server bsmp_server_t;
 
 // Structures
 
@@ -28,37 +39,14 @@ struct bsmp_raw_packet
 };
 
 /**
- * Allocate a new server instance, returning a handle to it. This instance
- * should be deallocated with bsmp_destroy after its use. The instance returned
- * is already initialized. The instance is allocated with malloc().
+ * Initialize an already allocated server instance
  *
- * @return A handle to a server or NULL if there wasn't enough memory to do the
- *         allocation.
- */
-bsmp_server_t *bsmp_server_new (void);
-
-/**
- * Allocate a new server instance, returning a handle to it. This instance
- * should be deallocated with bsmp_destroy after its use. The instance returned
- * is already initialized. The instance is returned from a pool of instances
- * allocated on the heap.
- *
- * @return A handle to a server or NULL if there wasn't enough memory to do the
- *         allocation.
- */
-bsmp_server_t *bsmp_server_new_from_pool (void);
-
-/**
- * Deallocate a server instance
- * 
- * @param server [input] Handle to the instance to be deallocated.
- * 
- * @return BSMP_SUCCESS or one of the following errors:
+ * @return Either BSMP_SUCCESS or one of the following errors:
  * <ul>
- *   <li>BSMP_ERR_PARAM_INVALID: server is a NULL pointer. </li>
- * </ul>
+ *  <li> BSMP_ERR_PARAM_INVALID: server is a NULL pointer. </li>
+ * <ul>
  */
-enum bsmp_err bsmp_server_destroy (bsmp_server_t *server);
+enum bsmp_err bsmp_server_init (struct bsmp_server *server);
 
 /**
  * Register a variable with a server instance. The memory pointed by the var

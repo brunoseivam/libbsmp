@@ -41,16 +41,6 @@ struct generic_list
 
 typedef SERVER_CMD_FUNCTION((*command_function_t));
 
-struct bsmp_server
-{
-    struct bsmp_var_ptr_list    vars;
-    struct bsmp_group_list      groups;
-    struct bsmp_curve_ptr_list  curves;
-    struct bsmp_func_ptr_list   funcs;
-
-    struct bsmp_var             *modified_list[BSMP_MAX_VARIABLES+1];
-    bsmp_hook_t                 hook;
-};
 
 enum bsmp_err var_check     (struct bsmp_var *var);
 enum bsmp_err curve_check   (struct bsmp_curve *curve);

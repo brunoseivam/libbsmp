@@ -7,19 +7,6 @@
 #include <stdbool.h>
 #include <string.h>
 
-#define BSMP_MAGIC 0x66837780 // ASCII codes for BSMP
-
-struct bsmp_client
-{
-    uint32_t                    magic;
-    bsmp_comm_func_t            send, recv;
-    struct bsmp_version         server_version;
-    struct bsmp_var_info_list   vars;
-    struct bsmp_group_list      groups;
-    struct bsmp_curve_info_list curves;
-    struct bsmp_func_info_list  funcs;
-};
-
 static char bin_op_code[BIN_OP_COUNT] =
 {
     [BIN_OP_AND]    = 'A',
@@ -319,16 +306,12 @@ static enum bsmp_err update_funcs_list(bsmp_client_t *client)
     return BSMP_SUCCESS;
 }
 
-bsmp_client_t *bsmp_client_new (bsmp_comm_func_t send_func,
+enum bsmp_err bsmp_client_init (bsmp_client_t *client,
+                                bsmp_comm_func_t send_func,
                                 bsmp_comm_func_t recv_func)
 {
-    if(!send_func || !recv_func)
-        return NULL;
-
-    struct bsmp_client *client = malloc(sizeof(*client));
-
     if(!client)
-        return NULL;
+        return BSMP_ERR_PARAM_INVALID;
 
     client->send = send_func;
     client->recv = recv_func;
@@ -346,26 +329,6 @@ bsmp_client_t *bsmp_client_new (bsmp_comm_func_t send_func,
     memset(&client->funcs, 0, sizeof(client->funcs));
 
     client->magic = 0;
-
-    return client;
-}
-
-enum bsmp_err bsmp_client_destroy (bsmp_client_t *client)
-{
-    if(!client)
-        return BSMP_ERR_PARAM_INVALID;
-
-    client->magic = 0;
-
-    free(client);
-
-    return BSMP_SUCCESS;
-}
-
-enum bsmp_err bsmp_client_init(bsmp_client_t *client)
-{
-    if(!client)
-        return BSMP_ERR_PARAM_INVALID;
 
     enum bsmp_err err;
 

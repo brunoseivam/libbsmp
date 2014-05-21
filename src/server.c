@@ -6,30 +6,11 @@
 #include <string.h>
 #include <stdbool.h>
 
-#define SERVER_POOL_SIZE    1
-
-struct
+enum bsmp_err bsmp_server_init (struct bsmp_server *server)
 {
-    struct bsmp_server list[SERVER_POOL_SIZE];
-    unsigned int count;
-    unsigned int allocated;
-}server_pool = {
-    .list = {},
-    .count = 0,
-    .allocated = 0,
-};
+    if(!server)
+        return BSMP_ERR_PARAM_INVALID;
 
-static int server_pool_index (struct bsmp_server *server)
-{
-    int i;
-    for(i = 0; i < SERVER_POOL_SIZE; ++i)
-        if(server == server_pool.list + i)
-            return i;
-    return -1;
-}
-
-static void server_init (struct bsmp_server *server)
-{
     memset(server, 0, sizeof(*server));
 
     group_init(&server->groups.list[GROUP_ALL_ID],   GROUP_ALL_ID);
@@ -37,54 +18,6 @@ static void server_init (struct bsmp_server *server)
     group_init(&server->groups.list[GROUP_WRITE_ID], GROUP_WRITE_ID);
 
     server->groups.count = GROUP_STANDARD_COUNT;
-}
-
-bsmp_server_t *bsmp_server_new (void)
-{
-    struct bsmp_server *server = (struct bsmp_server*) malloc(sizeof(*server));
-
-    if(!server)
-        return NULL;
-
-    server_init(server);
-
-    return server;
-}
-
-bsmp_server_t *bsmp_server_new_from_pool (void)
-{
-    if(server_pool.count == SERVER_POOL_SIZE)
-        return NULL;
-
-    unsigned int i;
-    for(i = 0; server_pool.allocated & (1 << i); ++i);
-
-    ++server_pool.count;
-    server_pool.allocated |= (1 << i);
-
-    struct bsmp_server *server = &server_pool.list[i];
-
-    server_init(server);
-
-    return server;
-}
-
-enum bsmp_err bsmp_server_destroy (bsmp_server_t* server)
-{
-    if(!server)
-        return BSMP_ERR_PARAM_INVALID;
-
-    int pool_index = server_pool_index(server);
-
-    if(pool_index < 0)
-        free(server);
-    else if(server_pool.allocated & (1 << pool_index))
-    {
-        --server_pool.count;
-        server_pool.allocated ^= 1 << pool_index;
-    }
-    else
-        return BSMP_ERR_PARAM_INVALID;
 
     return BSMP_SUCCESS;
 }

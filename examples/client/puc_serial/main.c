@@ -269,28 +269,22 @@ int main(int argc, char **argv)
     printf("PUC[%d]  %s @ %d bps\n", address, port, baud);
 
     // Create a new client instance
-    bsmp_client_t *bsmp = bsmp_client_new(puc_send, puc_recv);
-
-    if(!bsmp)
-    {
-        fprintf(stderr, "Error allocating BSMP instance\n");
-        goto exit_close;
-    }
+    bsmp_client_t bsmp;
 
     // Initialize the client instance (communication must be already working)
     enum bsmp_err err;
-    if((err = bsmp_client_init(bsmp)))
+    if((err = bsmp_client_init(&bsmp, puc_send, puc_recv)))
     {
         fprintf(stderr, "bsmp_client_init: %s\n", bsmp_error_str(err));
-        goto exit_destroy;
+        goto exit;
     }
 
     // Get the variables list
     struct bsmp_var_info_list *vars;
-    if((err = bsmp_get_vars_list(bsmp, &vars)))
+    if((err = bsmp_get_vars_list(&bsmp, &vars)))
     {
         fprintf(stderr, "bsmp_get_vars_list: %s\n", bsmp_error_str(err));
-        goto exit_destroy;
+        goto exit;
     }
 
     puts("\nVariables:\n");
@@ -298,10 +292,10 @@ int main(int argc, char **argv)
 
     // Get the groups list
     struct bsmp_group_list *groups;
-    if((err = bsmp_get_groups_list(bsmp, &groups)))
+    if((err = bsmp_get_groups_list(&bsmp, &groups)))
     {
         fprintf(stderr, "bsmp_get_groups_list: %s\n", bsmp_error_str(err));
-        goto exit_destroy;
+        goto exit;
     }
 
     puts("\nGroups:\n");
@@ -309,10 +303,10 @@ int main(int argc, char **argv)
 
     // Get the curves list
     struct bsmp_curve_info_list *curves;
-    if((err = bsmp_get_curves_list(bsmp, &curves)))
+    if((err = bsmp_get_curves_list(&bsmp, &curves)))
     {
         fprintf(stderr, "bsmp_get_curves_list: %s\n", bsmp_error_str(err));
-        goto exit_destroy;
+        goto exit;
     }
 
     puts("\nCurves:\n");
@@ -361,7 +355,7 @@ int main(int argc, char **argv)
 
     puts("\nImportant variables:\n");
     uint8_t det[4];
-    bsmp_read_var(bsmp, detected_boards, det);
+    bsmp_read_var(&bsmp, detected_boards, det);
     printf("Detected boards: %2X %2X %2X %2X\n", det[0], det[1], det[2], det[3]);
 
     if(first_ad)     printf("FIRST AD     id=%d\n", first_ad->id);
@@ -370,15 +364,12 @@ int main(int argc, char **argv)
     if(first_digout) printf("FIRST DIGOUT id=%d\n", first_digout->id);
 
     if(first_ad && first_da)
-        test_analog(bsmp, first_ad, first_da);
+        test_analog(&bsmp, first_ad, first_da);
 
     if(first_digin && first_digout)
-        test_digital(bsmp, first_digin, first_digout);
+        test_digital(&bsmp, first_digin, first_digout);
 
-exit_destroy:
-    bsmp_client_destroy(bsmp);
-    puts("BSMP deallocated");
-exit_close:
+exit:
     close(serial);
     puts("Serial port closed");
     return 0;

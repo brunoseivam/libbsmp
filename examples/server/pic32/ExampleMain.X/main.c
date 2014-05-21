@@ -87,7 +87,7 @@ struct bsmp_raw_packet recv_packet =
 struct bsmp_raw_packet send_packet =
                              { .data = send_buffer.data + SERIAL_HEADER };
 
-bsmp_server_t *bsmp = NULL;
+bsmp_server_t bsmp;
 
 void __ISR(_UART_2_VECTOR, IPL6SRS) serial_byte_received (void)
 {
@@ -136,7 +136,7 @@ void __ISR(_TIMER_2_VECTOR, IPL5SOFT) serial_packet_received (void)
     recv_packet.len = recv_buffer.index - SERIAL_HEADER - SERIAL_CSUM;
 
     // Library will process the packet
-    bsmp_process_packet(bsmp, &recv_packet, &send_packet);
+    bsmp_process_packet(&bsmp, &recv_packet, &send_packet);
 
     // Prepare answer
     send_buffer.data[0] = source;
@@ -170,8 +170,8 @@ exit:
 int main(void)
 {
     // Initialize communications library
-    bsmp = bsmp_server_new();
-    bsmp_register_hook(bsmp, hook);
+    bsmp_server_init(&bsmp);
+    bsmp_register_hook(&bsmp, hook);
 
     // Register PORTE as a writable var
     uint8_t porte_data[1];
@@ -179,7 +179,7 @@ int main(void)
     porte_var.info.size = 1;             // 1 byte
     porte_var.info.writable = true;      // Writable var
     porte_var.data = porte_data;         // Data associated with PORTE variable
-    bsmp_register_variable(bsmp, &porte_var);   // Register variable in library
+    bsmp_register_variable(&bsmp, &porte_var);   // Register variable in library
 
     // Initialize serial port
     UARTConfigure(UART2, UART_ENABLE_HIGH_SPEED);
@@ -194,7 +194,7 @@ int main(void)
     OpenTimer2(T2_OFF | UART_TIMER_PRESCALER | T2_SOURCE_INT, UART_WAIT_TICKS);
 
     ConfigIntTimer2(T2_INT_ON | T2_INT_PRIOR_5 | T2_INT_SUB_PRIOR_0);
-    
+
     // Enable interrupts
     INTEnableInterrupts();
     INTEnableSystemMultiVectoredInt();
