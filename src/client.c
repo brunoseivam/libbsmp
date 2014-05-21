@@ -328,8 +328,6 @@ enum bsmp_err bsmp_client_init (bsmp_client_t *client,
     client->funcs.count = 0;
     memset(&client->funcs, 0, sizeof(client->funcs));
 
-    client->magic = 0;
-
     enum bsmp_err err;
 
     if((err = get_version(client)))
@@ -347,7 +345,6 @@ enum bsmp_err bsmp_client_init (bsmp_client_t *client,
     if((err = update_funcs_list(client)))
         return err;
 
-    client->magic = BSMP_MAGIC;
     return BSMP_SUCCESS;
 }
 
@@ -366,7 +363,7 @@ BSMP_GET_LIST(funcs,    struct bsmp_func_info_list)
 
 struct bsmp_version *bsmp_get_version(bsmp_client_t *client)
 {
-    if(client && client->magic == BSMP_MAGIC)
+    if(client)
         return &client->server_version;
     return NULL;
 }
@@ -376,9 +373,6 @@ enum bsmp_err bsmp_read_var (bsmp_client_t *client, struct bsmp_var_info *var,
 {
     if(!client || !var || !value)
         return BSMP_ERR_PARAM_INVALID;
-
-    if(client->magic != BSMP_MAGIC)
-        return BSMP_ERR_NOT_INITIALIZED;
 
     if(!vars_list_contains(&client->vars, var))
         return BSMP_ERR_PARAM_INVALID;
@@ -409,9 +403,6 @@ enum bsmp_err bsmp_write_var (bsmp_client_t *client, struct bsmp_var_info *var,
 {
     if(!client || !var || !value)
         return BSMP_ERR_PARAM_INVALID;
-
-    if(client->magic != BSMP_MAGIC)
-        return BSMP_ERR_NOT_INITIALIZED;
 
     if(!vars_list_contains(&client->vars, var))
         return BSMP_ERR_PARAM_INVALID;
@@ -446,9 +437,6 @@ enum bsmp_err bsmp_write_read_vars (bsmp_client_t *client,
     if(!(client && write_var && write_value && read_var && read_value))
         return BSMP_ERR_PARAM_INVALID;
 
-    if(client->magic != BSMP_MAGIC)
-        return BSMP_ERR_NOT_INITIALIZED;
-
     if(!vars_list_contains(&client->vars, write_var) || !write_var->writable)
         return BSMP_ERR_PARAM_INVALID;
 
@@ -481,9 +469,6 @@ enum bsmp_err bsmp_read_group (bsmp_client_t *client, struct bsmp_group *grp,
     if(!client || !grp || !values)
         return BSMP_ERR_PARAM_INVALID;
 
-    if(client->magic != BSMP_MAGIC)
-        return BSMP_ERR_NOT_INITIALIZED;
-
     if(!groups_list_contains(&client->groups, grp))
         return BSMP_ERR_PARAM_INVALID;
 
@@ -511,9 +496,6 @@ enum bsmp_err bsmp_write_group (bsmp_client_t *client, struct bsmp_group *grp,
 {
     if(!client || !grp || !values)
         return BSMP_ERR_PARAM_INVALID;
-
-    if(client->magic != BSMP_MAGIC)
-        return BSMP_ERR_NOT_INITIALIZED;
 
     if(!groups_list_contains(&client->groups, grp))
         return BSMP_ERR_PARAM_INVALID;
@@ -544,9 +526,6 @@ enum bsmp_err bsmp_bin_op_var (bsmp_client_t *client, enum bsmp_bin_op op,
 {
     if(!client || !var || !mask)
         return BSMP_ERR_PARAM_INVALID;
-
-    if(client->magic != BSMP_MAGIC)
-        return BSMP_ERR_NOT_INITIALIZED;
 
     if(!vars_list_contains(&client->vars, var))
         return BSMP_ERR_PARAM_INVALID;
@@ -581,9 +560,6 @@ enum bsmp_err bsmp_bin_op_group (bsmp_client_t *client, enum bsmp_bin_op op,
     if(!client || !grp || !mask)
         return BSMP_ERR_PARAM_INVALID;
 
-    if(client->magic != BSMP_MAGIC)
-        return BSMP_ERR_NOT_INITIALIZED;
-
     if(!groups_list_contains(&client->groups, grp))
         return BSMP_ERR_PARAM_INVALID;
 
@@ -616,9 +592,6 @@ enum bsmp_err bsmp_create_group (bsmp_client_t *client,
 {
     if(!client || !list || !(*list))
         return BSMP_ERR_PARAM_INVALID;
-
-    if(client->magic != BSMP_MAGIC)
-        return BSMP_ERR_NOT_INITIALIZED;
 
     // Prepare message to be sent
     struct bsmp_message request = {
@@ -653,9 +626,6 @@ enum bsmp_err bsmp_remove_all_groups (bsmp_client_t *client)
     if(!client)
         return BSMP_ERR_PARAM_INVALID;
 
-    if(client->magic != BSMP_MAGIC)
-        return BSMP_ERR_NOT_INITIALIZED;
-
     struct bsmp_message response, request = {
         .code = CMD_GROUP_REMOVE_ALL,
         .payload_size = 0
@@ -676,9 +646,6 @@ enum bsmp_err bsmp_request_curve_block (bsmp_client_t *client,
 {
     if(!client || !curve || !data || !len)
         return BSMP_ERR_PARAM_INVALID;
-
-    if(client->magic != BSMP_MAGIC)
-        return BSMP_ERR_NOT_INITIALIZED;
 
     if(!curves_list_contains(&client->curves, curve))
         return BSMP_ERR_PARAM_INVALID;
@@ -707,9 +674,6 @@ enum bsmp_err bsmp_read_curve (bsmp_client_t *cli, struct bsmp_curve_info *cur,
     // Check parameters
     if(!cli || !cur || !buf || !len)
         return BSMP_ERR_PARAM_INVALID;
-
-    if(cli->magic != BSMP_MAGIC)
-        return BSMP_ERR_NOT_INITIALIZED;
 
     if(!curves_list_contains(&cli->curves, cur))
         return BSMP_ERR_PARAM_INVALID;
@@ -748,9 +712,6 @@ enum bsmp_err bsmp_send_curve_block (bsmp_client_t *client,
     if(!client || !curve || !data)
         return BSMP_ERR_PARAM_INVALID;
 
-    if(client->magic != BSMP_MAGIC)
-        return BSMP_ERR_NOT_INITIALIZED;
-
     if(!curves_list_contains(&client->curves, curve))
         return BSMP_ERR_PARAM_INVALID;
 
@@ -784,9 +745,6 @@ enum bsmp_err bsmp_write_curve (bsmp_client_t *cli, struct bsmp_curve_info *cur,
     if(!cli || !cur || !buf)
         return BSMP_ERR_PARAM_INVALID;
 
-    if(cli->magic != BSMP_MAGIC)
-        return BSMP_ERR_NOT_INITIALIZED;
-
     if(!curves_list_contains(&cli->curves, cur))
         return BSMP_ERR_PARAM_INVALID;
 
@@ -817,9 +775,6 @@ enum bsmp_err bsmp_recalc_checksum (bsmp_client_t *client,
     if(!client || !curve)
         return BSMP_ERR_PARAM_INVALID;
 
-    if(client->magic != BSMP_MAGIC)
-        return BSMP_ERR_NOT_INITIALIZED;
-
     if(!curves_list_contains(&client->curves, curve))
         return BSMP_ERR_PARAM_INVALID;
 
@@ -846,9 +801,6 @@ enum bsmp_err bsmp_func_execute (bsmp_client_t *client,
 {
     if(!client || !func || !error)
         return BSMP_ERR_PARAM_INVALID;
-
-    if(client->magic != BSMP_MAGIC)
-        return BSMP_ERR_NOT_INITIALIZED;
 
     if(!funcs_list_contains(&client->funcs, func))
         return BSMP_ERR_PARAM_INVALID;

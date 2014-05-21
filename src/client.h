@@ -3,8 +3,6 @@
 
 #include "bsmp.h"
 
-#define BSMP_MAGIC 0x66837780 // ASCII codes for BSMP
-
 // Types
 
 // Communication function (send or receive data). Must return 0 if successful
@@ -14,7 +12,6 @@ typedef int (*bsmp_comm_func_t) (uint8_t* data, uint32_t *count);
 // BSMP Client instance
 struct bsmp_client
 {
-    uint32_t                    magic;
     bsmp_comm_func_t            send, recv;
     struct bsmp_version         server_version;
     struct bsmp_var_info_list   vars;
