@@ -37,12 +37,12 @@
         <linkerTool>
           <linkerLibItems>
             <linkerLibProjectItem>
-              <makeArtifact PL="../libbsmp.X"
+              <makeArtifact PL="../../../../projects/microchip-pic32mx795-mplabx/libbsmp.X"
                             CT="3"
                             CN="default"
                             AC="true"
                             BL="true"
-                            WD="../libbsmp.X"
+                            WD="../../../../projects/microchip-pic32mx795-mplabx/libbsmp.X"
                             BC="${MAKE}  -f Makefile CONF=default"
                             DBC="${MAKE}  -f Makefile CONF=default TYPE_IMAGE=DEBUG_RUN"
                             CC="rm -rf &quot;build/default&quot; &quot;dist/default&quot;"

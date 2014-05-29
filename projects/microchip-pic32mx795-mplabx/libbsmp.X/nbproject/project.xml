@@ -3,7 +3,7 @@
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
             <name>libbsmp</name>
-            <creation-uuid>363a0dbd-8cdc-4c40-8e43-8cde8cc0173b</creation-uuid>
+            <creation-uuid>fdaf8a10-97d9-43bc-adae-d55f1e1f0462</creation-uuid>
             <make-project-type>0</make-project-type>
             <c-extensions>c</c-extensions>
             <cpp-extensions/>
