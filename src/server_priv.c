@@ -1,6 +1,6 @@
 #include "bsmp_priv.h"
 #include "server_priv.h"
-#include "server.h"
+#include "../include/server.h"
 #include "md5/md5.h"
 
 #include <stdlib.h>
