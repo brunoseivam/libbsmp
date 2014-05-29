@@ -88,6 +88,7 @@ static void group_to_mod_list (bsmp_server_t *server, struct bsmp_group *grp)
 
 SERVER_CMD_FUNCTION (query_version)
 {
+    (void)server;
     // Check payload size
     if(recv_msg->payload_size != 0)
     {
