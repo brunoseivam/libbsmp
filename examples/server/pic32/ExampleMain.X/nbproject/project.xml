@@ -10,7 +10,7 @@
             <header-extensions/>
             <sourceEncoding>UTF-8</sourceEncoding>
             <make-dep-projects>
-                <make-dep-project>../libbsmp.X</make-dep-project>
+                <make-dep-project>../../../../projects/microchip-pic32mx795-mplabx/libbsmp.X</make-dep-project>
             </make-dep-projects>
         </data>
     </configuration>
