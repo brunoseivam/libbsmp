@@ -26,11 +26,8 @@ Installing
 
 Installing the library is very easy:
 
-    mkdir build
-    cd build
-    ../configure --enable-silent-rules
-    make -s
-    sudo make -s install
+    make
+    sudo make install
 
 Examples
 --------
@@ -45,21 +42,21 @@ When building a server, this would be the order of the calls to be made. They ar
     #include <bsmp/server.h>       // Header with all the necessary functions
     bsmp_server_t srv;             // Server instance
     bsmp_server_init(&srv);        // Initialize the instance
-    
+
     // Create a function to intervene before reads and after writes, if
     // necessary
     void hook(enum bsmp_operation op, struct bsmp_var **list)
     {
         ...
     }
-    
+
     bsmp_register_hook(&server,hook);    // Register the hook with the server
-    
+
     struct bsmp_var v = {...};     // Create a variable
     bsmp_register_var(&bsmp, &v);  // Register a variable with the server
 
     // Same with bsmp_curve and bsmp_function
-    
+
     // Once everything is registered, just
     for(;;)
     {
@@ -87,7 +84,7 @@ Order of calls for a client
 
     struct bsmp_func_info_list *funcs;
     bsmp_get_funcs_list(&cli, &funcs);
-    
+
     // Manipulate entities
 
     // Read first var
@@ -101,11 +98,11 @@ Order of calls for a client
 
     // Consult the header to see how to manipulate other entities (groups, curves,
     // and functions.
-    
-    
 
 
 
 
-    
+
+
+
 
