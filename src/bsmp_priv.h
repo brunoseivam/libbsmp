@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "bsmp.h"
+#include "../include/bsmp.h"
 
 #define WRITABLE_MASK       0x80
 #define SIZE_MASK           0x7F

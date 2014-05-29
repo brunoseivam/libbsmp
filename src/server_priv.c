@@ -1,6 +1,6 @@
 #include "bsmp_priv.h"
 #include "server_priv.h"
-#include "server.h"
+#include "../include/server.h"
 #include "md5/md5.h"
 
 #include <stdlib.h>
@@ -88,6 +88,7 @@ static void group_to_mod_list (bsmp_server_t *server, struct bsmp_group *grp)
 
 SERVER_CMD_FUNCTION (query_version)
 {
+    (void)server;
     // Check payload size
     if(recv_msg->payload_size != 0)
     {

@@ -1,4 +1,4 @@
-#include "bsmp.h"
+#include "../include/bsmp.h"
 
 static char* error_str[BSMP_ERR_MAX] =
 {
