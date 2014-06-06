@@ -13,6 +13,7 @@ enum bsmp_operation
     BSMP_OP_WRITE,                  // Write command arrived
 };
 typedef void (*bsmp_hook_t) (enum bsmp_operation op, struct bsmp_var **list);
+typedef void (*bsmp_custom_md5_t) (struct bsmp_curve *curve, uint8_t *csum);
 
 // BSMP instance
 struct bsmp_server
@@ -24,6 +25,7 @@ struct bsmp_server
 
     struct bsmp_var             *modified_list[BSMP_MAX_VARIABLES+1];
     bsmp_hook_t                 hook;
+    bsmp_custom_md5_t           custom_md5;
 };
 
 // Handle to a server instance

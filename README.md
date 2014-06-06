@@ -99,10 +99,3 @@ Order of calls for a client
     // Consult the header to see how to manipulate other entities (groups, curves,
     // and functions.
 
-
-
-
-
-
-
-

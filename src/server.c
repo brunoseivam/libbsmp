@@ -77,6 +77,16 @@ enum bsmp_err bsmp_register_hook(bsmp_server_t* server, bsmp_hook_t hook)
     return BSMP_SUCCESS;
 }
 
+enum bsmp_err bsmp_register_md5(bsmp_server_t *server, bsmp_custom_md5_t md5)
+{
+    if(!server || !md5)
+        return BSMP_ERR_PARAM_INVALID;
+
+    server->custom_md5 = md5;
+
+    return BSMP_SUCCESS;
+}
+
 struct raw_message
 {
     uint8_t command_code;
