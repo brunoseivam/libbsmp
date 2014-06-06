@@ -661,19 +661,24 @@ SERVER_CMD_FUNCTION (curve_recalc_csum)
     struct bsmp_curve *curve = server->curves.list[curve_id];
 
     // Calculate checksum (this might take a while)
-    uint8_t block[curve->info.block_size];
-    MD5_CTX md5ctx;
-
-    MD5Init(&md5ctx);
-
-    unsigned int i;
-    for(i = 0; i < curve->info.nblocks; ++i)
+    if(server->custom_md5)
+        server->custom_md5(curve, curve->info.checksum);
+    else
     {
-        uint16_t read_bytes = 0;
-        curve->read_block(curve, (uint16_t)i, block, &read_bytes);
-        MD5Update(&md5ctx, block, read_bytes);
+        uint8_t block[curve->info.block_size];
+        MD5_CTX md5ctx;
+
+        MD5Init(&md5ctx);
+
+        unsigned int i;
+        for(i = 0; i < curve->info.nblocks; ++i)
+        {
+            uint16_t read_bytes = 0;
+            curve->read_block(curve, (uint16_t)i, block, &read_bytes);
+            MD5Update(&md5ctx, block, read_bytes);
+        }
+        MD5Final(curve->info.checksum, &md5ctx);
     }
-    MD5Final(curve->info.checksum, &md5ctx);
 
     MESSAGE_SET_ANSWER(send_msg, CMD_CURVE_CSUM);
     memcpy(send_msg->payload, curve->info.checksum, BSMP_CURVE_CSUM_SIZE);
