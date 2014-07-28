@@ -44,6 +44,7 @@
 #define SERIAL_CSUM             1
 
 #define SERIAL_ADDRESS          1   // My Address
+#define SERIAL_MASTER_ADDRESS   0   // Master Address
 
 #define SERIAL_BUF_SIZE         (SERIAL_HEADER+16384+SERIAL_CSUM)
 
@@ -118,9 +119,6 @@ void __ISR(_TIMER_2_VECTOR, IPL5SOFT) serial_packet_received (void)
     unsigned int_status = INTDisableInterrupts();
     T2CONCLR = _T2CON_ON_MASK;  // Turn TIMER2 off
 
-    uint8_t dest   = recv_buffer.data[0];
-    uint8_t source = recv_buffer.data[1];
-
     // Received less than HEADER + CSUM bytes
     if(recv_buffer.index < (SERIAL_HEADER + SERIAL_CSUM))
         goto exit;
@@ -130,7 +128,7 @@ void __ISR(_TIMER_2_VECTOR, IPL5SOFT) serial_packet_received (void)
         goto exit;
 
     // Packet is not for me
-    if(dest != SERIAL_ADDRESS)
+    if(recv_buffer.data[0] != SERIAL_ADDRESS)
         goto exit;
 
     recv_packet.len = recv_buffer.index - SERIAL_HEADER - SERIAL_CSUM;
@@ -139,8 +137,7 @@ void __ISR(_TIMER_2_VECTOR, IPL5SOFT) serial_packet_received (void)
     bsmp_process_packet(&bsmp, &recv_packet, &send_packet);
 
     // Prepare answer
-    send_buffer.data[0] = source;
-    send_buffer.data[1] = dest;
+    send_buffer.data[0] = SERIAL_MASTER_ADDRESS;
     send_buffer.csum    = 0;
 
     // Send packet
