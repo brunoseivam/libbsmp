@@ -60,7 +60,7 @@ uint8_t read_PORTE (void)
     return (LATE & 0xFF);
 }
 
-void hook(enum bsmp_operation op, struct bsmp_var **list)
+bool hook(enum bsmp_operation op, struct bsmp_var **list)
 {
     switch(op)
     {
@@ -71,6 +71,7 @@ void hook(enum bsmp_operation op, struct bsmp_var **list)
         write_PORTE(list[0]->data[0]);
         break;
     }
+    return true;
 }
 
 struct serial_buffer
