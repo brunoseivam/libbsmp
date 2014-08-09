@@ -9,7 +9,7 @@ HDRS = include/bsmp.h include/server.h include/client.h
 INSTALL ?= /usr/bin/install
 INSTALL_FLAGS = -c -m 644
 LDCONFIG ?= /sbin/ldconfig
-PREFIX ?= /usr/local
+PREFIX ?= /usr
 LDIR = $(PREFIX)/lib
 IDIR = $(PREFIX)/include/bsmp
 
