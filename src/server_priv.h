@@ -6,8 +6,8 @@
 #include "../include/server.h"
 
 #define VERSION     2
-#define SUBVERSION  0
-#define REVISION    0   // unused
+#define SUBVERSION  10
+#define REVISION    0
 
 #define MESSAGE_SET_ANSWER(msg, code)\
     do {\
