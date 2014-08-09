@@ -604,9 +604,12 @@ SERVER_CMD_FUNCTION (curve_block_request)
     send_msg->payload[1] = recv_msg->payload[1];    // Offset (most sig.)
     send_msg->payload[2] = recv_msg->payload[2];    // Offset (less sig.)
 
-    curve->read_block(curve, block_offset,
-                      send_msg->payload + BSMP_CURVE_BLOCK_INFO,
-                      &send_msg->payload_size);
+    bool ok = curve->read_block(curve, block_offset,
+                                send_msg->payload + BSMP_CURVE_BLOCK_INFO,
+                                &send_msg->payload_size);
+
+    if(!ok)
+        MESSAGE_SET_ANSWER_RET(send_msg, CMD_ERR_RESOURCE_BUSY);
 
     send_msg->payload_size += BSMP_CURVE_BLOCK_INFO;
 }
@@ -637,9 +640,12 @@ SERVER_CMD_FUNCTION (curve_block)
         MESSAGE_SET_ANSWER_RET(send_msg, CMD_ERR_INVALID_VALUE);
 
     // Everything ok, write block
-    curve->write_block(curve, block_offset,
-                       recv_msg->payload + BSMP_CURVE_BLOCK_INFO,
-                       recv_msg->payload_size - BSMP_CURVE_BLOCK_INFO);
+    bool ok = curve->write_block(curve, block_offset,
+                                 recv_msg->payload + BSMP_CURVE_BLOCK_INFO,
+                                 recv_msg->payload_size - BSMP_CURVE_BLOCK_INFO);
+
+    if(!ok)
+        MESSAGE_SET_ANSWER_RET(send_msg, CMD_ERR_RESOURCE_BUSY);
 
     memset(curve->info.checksum, 0, sizeof(curve->info.checksum));
     MESSAGE_SET_ANSWER(send_msg, CMD_OK);
@@ -662,7 +668,10 @@ SERVER_CMD_FUNCTION (curve_recalc_csum)
 
     // Calculate checksum (this might take a while)
     if(server->custom_md5)
-        server->custom_md5(curve, curve->info.checksum);
+    {
+        if(!server->custom_md5(curve, curve->info.checksum))
+            MESSAGE_SET_ANSWER_RET(send_msg, CMD_ERR_RESOURCE_BUSY);
+    }
     else
     {
         uint8_t block[curve->info.block_size];
@@ -674,7 +683,8 @@ SERVER_CMD_FUNCTION (curve_recalc_csum)
         for(i = 0; i < curve->info.nblocks; ++i)
         {
             uint16_t read_bytes = 0;
-            curve->read_block(curve, (uint16_t)i, block, &read_bytes);
+            if(!curve->read_block(curve, (uint16_t)i, block, &read_bytes))
+                MESSAGE_SET_ANSWER_RET(send_msg, CMD_ERR_RESOURCE_BUSY);
             MD5Update(&md5ctx, block, read_bytes);
         }
         MD5Final(curve->info.checksum, &md5ctx);
