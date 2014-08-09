@@ -12,8 +12,8 @@ enum bsmp_operation
     BSMP_OP_READ,                   // Read command arrived
     BSMP_OP_WRITE,                  // Write command arrived
 };
-typedef void (*bsmp_hook_t) (enum bsmp_operation op, struct bsmp_var **list);
-typedef void (*bsmp_custom_md5_t) (struct bsmp_curve *curve, uint8_t *csum);
+typedef bool (*bsmp_hook_t) (enum bsmp_operation op, struct bsmp_var **list);
+typedef bool (*bsmp_custom_md5_t) (struct bsmp_curve *curve, uint8_t *csum);
 
 // BSMP instance
 struct bsmp_server
@@ -132,7 +132,7 @@ enum bsmp_err bsmp_register_function (bsmp_server_t *server,
                                       struct bsmp_func *func);
 
 /**
- * Register a function that will be called in two moments:
+ * Register a function that will be called at two moments:
  *
  * 1. When a command that reads one or more variables arrives, the hook function
  * is called right BEFORE reading the variables and putting the read values in
@@ -148,6 +148,9 @@ enum bsmp_err bsmp_register_function (bsmp_server_t *server,
  * A hook function receives two parameters: the first one indicating the type
  * of operation being performed (specified in enum bsmp_operation) and the
  * second one containing the list of variables being affected by that operation.
+ *
+ * The hook function must return true if everything was done or false if some of
+ * the Variables couldn't be read/written (resource busy).
  *
  * @param server [input] Handle to a BSMP instance.
  * @param hook [input] Hook function

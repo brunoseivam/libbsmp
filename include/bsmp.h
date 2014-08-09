@@ -157,9 +157,9 @@ struct bsmp_curve_info
 
 struct bsmp_curve;
 
-typedef void (*bsmp_curve_read_t)  (struct bsmp_curve *curve, uint16_t block,
+typedef bool (*bsmp_curve_read_t)  (struct bsmp_curve *curve, uint16_t block,
                                     uint8_t *data, uint16_t *len);
-typedef void (*bsmp_curve_write_t) (struct bsmp_curve *curve, uint16_t block,
+typedef bool (*bsmp_curve_write_t) (struct bsmp_curve *curve, uint16_t block,
                                     uint8_t *data, uint16_t len);
 struct bsmp_curve
 {
@@ -167,10 +167,10 @@ struct bsmp_curve
     struct bsmp_curve_info info;
 
     // Functions to read/write a block
-    void (*read_block)(struct bsmp_curve *curve, uint16_t block, uint8_t *data,
+    bool (*read_block)(struct bsmp_curve *curve, uint16_t block, uint8_t *data,
                        uint16_t *len);
 
-    void (*write_block)(struct bsmp_curve *curve, uint16_t block, uint8_t *data,
+    bool (*write_block)(struct bsmp_curve *curve, uint16_t block, uint8_t *data,
                         uint16_t len);
 
     // The user can make use of this variable as he wishes. It is not touched by

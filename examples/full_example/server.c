@@ -168,7 +168,7 @@ static uint8_t big_curve_memory[64*32768];
  * size. Likewise, it is possible to write less than curve->info.block_size
  * bytes to a block.
  */
-static void curve_read_block (struct bsmp_curve *curve, uint16_t block,
+static bool curve_read_block (struct bsmp_curve *curve, uint16_t block,
                               uint8_t *data, uint16_t *len)
 {
     /* Let's check which curve we have so we can point to the right block. */
@@ -190,20 +190,16 @@ static void curve_read_block (struct bsmp_curve *curve, uint16_t block,
         block_data = &little_curve_memory[block*block_size];
     else if(!strcmp((char*)curve->user, "MY AWESOME BIG CURVE"))
         block_data = &big_curve_memory[block*block_size];
-    else
-    {
-        fprintf(stderr,S"That's weird. I've got an unexpected Curve to read\n");
-        return;
-    }
 
     /* Now we need to copy the block requested into the 'data' pointer. */
     memcpy(data, block_data, block_size);
 
     /* We copied the whole requested block */
     *len = block_size;
+    return true;
 }
 
-static void curve_write_block (struct bsmp_curve *curve, uint16_t block,
+static bool curve_write_block (struct bsmp_curve *curve, uint16_t block,
                                uint8_t *data, uint16_t len)
 {
     /*
@@ -217,14 +213,10 @@ static void curve_write_block (struct bsmp_curve *curve, uint16_t block,
 
     if(!strcmp((char*)curve->user, "MY PRETTY LITTLE CURVE"))
         block_data = &little_curve_memory[block*len];
-    else
-    {
-        fprintf(stderr,S"This is not the Curve I'm looking for.\n");
-        return;
-    }
 
     /* Now copy the 'data' pointer into the requested block. */
     memcpy(block_data, data, len);
+    return true;
 }
 
 /* Let's declare those Curves already! */
@@ -336,7 +328,7 @@ static struct bsmp_func quote_func = {
  * right AFTER a WRITE command is performed. Our hook here won't do much, just
  * print what is happening.
  */
-static void hook (enum bsmp_operation op, struct bsmp_var **list)
+static bool hook (enum bsmp_operation op, struct bsmp_var **list)
 {
     fprintf(stdout, S"Request to %s the Variables: ",
             op == BSMP_OP_READ ? "READ from" : "WRITE to");
@@ -348,6 +340,7 @@ static void hook (enum bsmp_operation op, struct bsmp_var **list)
     }
 
     fprintf(stdout, "\n");
+    return true;
 }
 
 /*
