@@ -162,6 +162,19 @@ enum bsmp_err bsmp_register_function (bsmp_server_t *server,
  */
 enum bsmp_err bsmp_register_hook (bsmp_server_t *server, bsmp_hook_t hook);
 
+/*
+ * Register a custom function to perform the md5 checksum on a curve.
+ *
+ * @param server [input] Handle to a server instance
+ * @param md5 [input] Pointer to the custom md5 function
+ *
+ * @return BSMP_SUCCESS or one of the following errors:
+ * <ul>
+ *   <li> BSMP_ERR_PARAM_INVALID: Either server or md5 is a NULL pointer. </li>
+ * </ul>
+ */
+enum bsmp_err bsmp_register_md5(bsmp_server_t *server, bsmp_custom_md5_t md5);
+
 /**
  * Process a received message and prepare an answer.
  *
@@ -171,7 +184,7 @@ enum bsmp_err bsmp_register_hook (bsmp_server_t *server, bsmp_hook_t hook);
  *
  * @return BSMP_SUCCESS or one of the following errors:
  * <ul>
- *   <li> SSLP_ERR_PARAM_INVALID: Either server, request, or response is
+ *   <li> BSMP_ERR_PARAM_INVALID: Either server, request, or response is
  *                                a NULL pointer.</li>
  * </ul>
  */
